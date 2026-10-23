@@ -6,22 +6,36 @@ import { publicFloorplanUrl } from '../../lib/feHelpers'
 
 const FE_TYPES = ['CO2', 'ABC', 'Water']
 
+// Header aliases so files exported from Excel or the old app still import.
+const HEADER_ALIASES = {
+  map_x: 'x', mapx: 'x', pos_x: 'x', x_px: 'x', xpx: 'x',
+  map_y: 'y', mapy: 'y', pos_y: 'y', y_px: 'y', ypx: 'y',
+  floor_name: 'floor', level: 'floor', plant: 'building',
+  location_desc: 'location', type: 'fe_type', serial: 'serial_no', expiry: 'expiry_date', expirydate: 'expiry_date',
+}
+
 function parseCSV(text) {
+  text = text.replace(/^\uFEFF/, '') // Excel "CSV UTF-8" adds an invisible mark before the first header
   const lines = text.split(/\r?\n/).filter((l) => l.trim())
   if (!lines.length) return []
+  // Some Excel regional settings save with ; instead of ,
+  const delim = (lines[0].match(/;/g) || []).length > (lines[0].match(/,/g) || []).length ? ';' : ','
   const split = (line) => {
     const out = []
     let cur = '', inQ = false
     for (let i = 0; i < line.length; i++) {
       const c = line[i]
       if (c === '"') { if (inQ && line[i + 1] === '"') { cur += '"'; i++ } else inQ = !inQ }
-      else if (c === ',' && !inQ) { out.push(cur); cur = '' }
+      else if (c === delim && !inQ) { out.push(cur); cur = '' }
       else cur += c
     }
     out.push(cur)
     return out.map((s) => s.trim())
   }
-  const headers = split(lines[0]).map((h) => h.toLowerCase())
+  const headers = split(lines[0]).map((h) => {
+    const k = h.toLowerCase().trim().replace(/[\s-]+/g, '_').replace(/[()]/g, '')
+    return HEADER_ALIASES[k] || HEADER_ALIASES[k.replace(/_/g, '')] || k
+  })
   return lines.slice(1).map((l) => {
     const cells = split(l)
     const row = {}
@@ -113,18 +127,20 @@ export default function FEAdmin() {
 
       // map building+floor names to ids
       const floorKey = {}
-      for (const f of floors) floorKey[`${f.building.toLowerCase()}|${f.floor_name.toLowerCase()}`] = f.id
+      const norm = (v) => String(v || '').toLowerCase().replace(/\s+/g, ' ').trim()
+      for (const f of floors) floorKey[`${norm(f.building)}|${norm(f.floor_name)}`] = f.id
 
       const payload = []
       const skipped = []
       for (const r of rows) {
         const code = r.fe_code || r.code
         if (!code) { skipped.push('(missing fe_code)'); continue }
-        const b = (r.building || '').toLowerCase()
-        const fl = (r.floor || r.floor_name || '').toLowerCase()
+        const b = norm(r.building)
+        const fl = norm(r.floor || r.floor_name)
         const floor_id = floorKey[`${b}|${fl}`] || null
-        const px = r.x !== '' && r.x != null ? Number(r.x) : null
-        const py = r.y !== '' && r.y != null ? Number(r.y) : null
+        const num = (v) => (v === '' || v == null ? null : Number(String(v).replace(',', '.')))
+        const px = num(r.x)
+        const py = num(r.y)
         payload.push({
           fe_code: code,
           fe_type: FE_TYPES.includes(r.fe_type) ? r.fe_type : (r.fe_type || r.type || 'ABC'),
@@ -144,7 +160,8 @@ export default function FEAdmin() {
       if (error) throw error
 
       const noFloor = payload.filter((p) => !p.floor_id).length
-      setImportResult({ imported: payload.length, skipped: skipped.length, noFloor })
+      const noXY = payload.filter((p) => p.map_x == null || p.map_y == null).length
+      setImportResult({ imported: payload.length, skipped: skipped.length, noFloor, noXY })
       load()
     } catch (err) {
       setMsg(`Import failed: ${err.message}`)
@@ -239,6 +256,7 @@ export default function FEAdmin() {
             Imported {importResult.imported}.
             {importResult.noFloor > 0 && ` ${importResult.noFloor} had no matching building/floor — set their floor later.`}
             {importResult.skipped > 0 && ` ${importResult.skipped} row(s) skipped (missing fe_code).`}
+            {importResult.noXY > 0 && ` ${importResult.noXY} had no x/y position — place them on the map in Edit mode.`}
           </div>
         )}
       </div>
