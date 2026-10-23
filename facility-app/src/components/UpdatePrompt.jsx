@@ -13,5 +13,5 @@ export default function UpdatePrompt(){
   return()=>clearInterval(timer)
  },[])
  if(!needRefresh)return null
- return <div className="update-banner" role="status"><span>{protectedWork?'Update ready. Finish your checklist or upload first.':'A new version is ready. Saved drafts will be kept.'}</span><button disabled={protectedWork} onClick={()=>updateSW?.(true)}>Update now</button></div>
+ return <div className="update-banner" role="status"><span>{protectedWork?'Update ready. Finish your checklist or upload first.':'A new version is ready. Saved drafts will be kept.'}</span><button disabled={protectedWork} onClick={()=>{updateSW?.(true);setTimeout(()=>window.location.reload(),1500)}}>Update now</button></div>
 }
