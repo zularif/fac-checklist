@@ -33,6 +33,9 @@ export default defineConfig({
         // keeping the offline queue (not the SW) responsible for data sync.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallbackDenylist: [/^\/api\//, /^\/files\//],
+        // After "Update now" the new version takes over open pages straight away.
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
       },
     }),
   ],
