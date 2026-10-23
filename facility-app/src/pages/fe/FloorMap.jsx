@@ -23,6 +23,8 @@ export default function FloorMap() {
   // edit mode
   const [editMode, setEditMode] = useState(false)
   const [pendingPoint, setPendingPoint] = useState(null)
+  const [quickPlace, setQuickPlace] = useState(false) // click-to-place the list in order
+  const [quickSkip, setQuickSkip] = useState([])       // ids skipped during quick place
   const [newUnit, setNewUnit] = useState(null)
   const [draggingId, setDraggingId] = useState(null)
   const [selectedEdit, setSelectedEdit] = useState(null) // pin selected in edit mode
@@ -261,8 +263,45 @@ export default function FloorMap() {
   // ---------- adding / assigning ----------
   function handleMapClick(e) {
     if (!editMode || gesture.current.moved || draggingId) return
-    setPendingPoint(pointToFloorCoords(e.clientX, e.clientY))
+    const point = pointToFloorCoords(e.clientX, e.clientY)
+    if (quickPlace) { quickPlaceAt(point); return }
+    setPendingPoint(point)
     setNewUnit(null)
+  }
+
+  // ---------- place the whole list ----------
+  const quickNext = unplaced.find((u) => !quickSkip.includes(u.id)) || null
+
+  async function quickPlaceAt(point) {
+    const u = quickNext
+    if (!u) { setQuickPlace(false); return }
+    // show it immediately, then save
+    setUnits((prev) => prev.map((x) => (x.id === u.id ? { ...x, map_x: point.x, map_y: point.y } : x)))
+    const { error } = await db.from('fire_extinguishers').update({ map_x: point.x, map_y: point.y }).eq('id', u.id)
+    if (error) { setMsg(`Couldn't place ${u.fe_code}: ${error.message}`); loadUnits() }
+  }
+
+  // Put every unplaced extinguisher in a neat grid at the top-left of the plan,
+  // so they are all visible and can be dragged to their real spots.
+  async function placeAllInGrid() {
+    if (!unplaced.length) return
+    if (!window.confirm(`Put all ${unplaced.length} extinguishers on this plan in a row at the top? You can then drag each one to its real spot.`)) return
+    const rw = floor?.ref_width, rh = floor?.ref_height
+    const W = rw && rh ? rw : 100, H = rw && rh ? rh : 100
+    const perRow = 12
+    const stepX = W * 0.06, stepY = H * 0.07
+    const updates = unplaced.map((u, i) => {
+      const { x, y } = clampCoords(W * 0.05 + (i % perRow) * stepX, H * 0.06 + Math.floor(i / perRow) * stepY)
+      return { id: u.id, map_x: Math.round(x * 10) / 10, map_y: Math.round(y * 10) / 10 }
+    })
+    setUnits((prev) => prev.map((x) => { const p = updates.find((v) => v.id === x.id); return p ? { ...x, ...p } : x }))
+    let failed = 0
+    for (let i = 0; i < updates.length; i += 10) {
+      const results = await Promise.all(updates.slice(i, i + 10).map((v) => db.from('fire_extinguishers').update({ map_x: v.map_x, map_y: v.map_y }).eq('id', v.id)))
+      failed += results.filter((r) => r.error).length
+    }
+    setMsg(failed ? `${failed} could not be placed — try again.` : '')
+    loadUnits()
   }
 
   async function assignExisting(feId) {
@@ -420,7 +459,7 @@ export default function FloorMap() {
       {isAdmin && (
         <div className="btn-row" style={{ marginBottom: 10 }}>
           <button className={editMode ? 'btn-primary' : 'btn-secondary'}
-            onClick={() => { setEditMode(!editMode); setPendingPoint(null); setNewUnit(null); setSelectedEdit(null); setEditForm(null) }}>
+            onClick={() => { setEditMode(!editMode); setPendingPoint(null); setNewUnit(null); setSelectedEdit(null); setEditForm(null); setQuickPlace(false); setQuickSkip([]) }}>
             <i className={editMode ? 'ti ti-check' : 'ti ti-edit'} aria-hidden="true" />
             {editMode ? 'Done editing' : 'Edit mode'}
           </button>
@@ -430,8 +469,38 @@ export default function FloorMap() {
         </div>
       )}
 
-      {editMode && !pendingPoint && (
+      {editMode && !pendingPoint && !quickPlace && (
         <div className="banner-warn">Tap a pin to see its details. Press and drag a pin to move it. Tap an empty spot to add an extinguisher.</div>
+      )}
+      {editMode && !pendingPoint && !quickPlace && unplaced.length > 0 && (
+        <div className="card" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+          <strong style={{ flex: '1 1 100%' }}>{unplaced.length} extinguisher(s) on this floor are not on the map yet</strong>
+          <button className="btn-primary" style={{ width: 'auto' }} onClick={() => { setQuickSkip([]); setQuickPlace(true) }}>
+            <i className="ti ti-hand-click" aria-hidden="true" />Place them one by one
+          </button>
+          <button className="btn-secondary" style={{ width: 'auto' }} onClick={placeAllInGrid}>
+            <i className="ti ti-layout-grid" aria-hidden="true" />Put all on the plan, then drag
+          </button>
+        </div>
+      )}
+      {editMode && quickPlace && (
+        <div className="banner-ok" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+          {quickNext ? (
+            <>
+              <span style={{ flex: '1 1 auto' }}>
+                Click on the plan where <strong>{quickNext.fe_code}</strong> is
+                {quickNext.location_desc ? ` (${quickNext.location_desc})` : ''} — {unplaced.length} left
+              </span>
+              <button className="btn-secondary" style={{ width: 'auto' }} onClick={() => setQuickSkip((s) => [...s, quickNext.id])}>Skip</button>
+              <button className="btn-secondary" style={{ width: 'auto' }} onClick={() => setQuickPlace(false)}>Stop</button>
+            </>
+          ) : (
+            <>
+              <span style={{ flex: '1 1 auto' }}>{unplaced.length ? 'Only skipped extinguishers are left.' : 'All extinguishers on this floor are on the map.'}</span>
+              <button className="btn-secondary" style={{ width: 'auto' }} onClick={() => setQuickPlace(false)}>Done</button>
+            </>
+          )}
+        </div>
       )}
       {msg && <p className="error-text">{msg}</p>}
 
