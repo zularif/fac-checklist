@@ -23,6 +23,7 @@ export default function FloorMap() {
   // edit mode
   const [editMode, setEditMode] = useState(false)
   const [pendingPoint, setPendingPoint] = useState(null)
+  const [noFloor, setNoFloor] = useState([])           // active extinguishers with no floor (import didn't match)
   const [quickPlace, setQuickPlace] = useState(false) // click-to-place the list in order
   const [quickSkip, setQuickSkip] = useState([])       // ids skipped during quick place
   const [newUnit, setNewUnit] = useState(null)
@@ -119,6 +120,9 @@ export default function FloorMap() {
       }
     }
     setUnits(fes || [])
+    const { data: lost } = await db.from('fire_extinguishers')
+      .select('id, fe_code, fe_type, location_desc').is('floor_id', null).eq('status', 'Active').order('fe_code')
+    setNoFloor(lost || [])
     for (const r of rescued) {
       db.from('fire_extinguishers').update({ map_x: r.map_x, map_y: r.map_y }).eq('id', r.id).then(() => {})
     }
@@ -267,6 +271,19 @@ export default function FloorMap() {
     if (quickPlace) { quickPlaceAt(point); return }
     setPendingPoint(point)
     setNewUnit(null)
+  }
+
+  // Extinguishers whose building/floor didn't match during import have no floor,
+  // so they appear on no map. Move them onto the floor being viewed.
+  async function moveToThisFloor(list) {
+    if (!list.length) return
+    if (list.length > 1 && !window.confirm(`Move ${list.length} extinguishers to ${floor?.building} ${floor?.floor_name}? You can then place them on the plan.`)) return
+    const ids = list.map((u) => u.id)
+    for (let i = 0; i < ids.length; i += 200) {
+      const { error } = await db.from('fire_extinguishers').update({ floor_id: floorId }).in('id', ids.slice(i, i + 200))
+      if (error) { setMsg(`Couldn't move: ${error.message}`); break }
+    }
+    loadUnits()
   }
 
   // ---------- place the whole list ----------
@@ -471,6 +488,26 @@ export default function FloorMap() {
 
       {editMode && !pendingPoint && !quickPlace && (
         <div className="banner-warn">Tap a pin to see its details. Press and drag a pin to move it. Tap an empty spot to add an extinguisher.</div>
+      )}
+      {isAdmin && !quickPlace && noFloor.length > 0 && (
+        <div className="banner-warn" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+          <span style={{ flex: '1 1 100%' }}>
+            <strong>{noFloor.length} extinguisher(s) from your list have no floor</strong>, so they don't show on any map.
+            Their building/floor in the import didn't match a floor in FE admin.
+          </span>
+          <button className="btn-primary" style={{ width: 'auto' }} onClick={() => moveToThisFloor(noFloor)}>
+            Move all {noFloor.length} to {floor?.building} {floor?.floor_name}
+          </button>
+          <details style={{ flex: '1 1 100%' }}>
+            <summary>Choose which ones</summary>
+            {noFloor.map((u) => (
+              <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+                <span>{u.fe_code} · {u.fe_type}{u.location_desc ? ` · ${u.location_desc}` : ''}</span>
+                <button className="btn-secondary" style={{ width: 'auto' }} onClick={() => moveToThisFloor([u])}>Move here</button>
+              </div>
+            ))}
+          </details>
+        </div>
       )}
       {editMode && !pendingPoint && !quickPlace && unplaced.length > 0 && (
         <div className="card" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
