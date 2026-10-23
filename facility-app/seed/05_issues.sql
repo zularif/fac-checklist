@@ -1,0 +1,2 @@
+-- issues (1 rows)
+insert into issues (issue_id, plant_id, system, location, issue, status, root_cause, pic) select 'ISS001', id, 'CDA System', 'Pump Room', 'CDA trip at pump room', 'In Progress', 'Pipe PVC burst cause no water in cooling tower', 'luqman' from plants where plant_id = 'P2';

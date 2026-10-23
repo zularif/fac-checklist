@@ -1,0 +1,21 @@
+-- areas (20 rows)
+insert into areas (area_id, area_name, plant_id, description, status) select 'A001', 'Consumer Room HT 33kV P1', id, 'High Voltage Consumer Room', 'Active' from plants where plant_id = 'P1';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A002', 'Transformer Room 33kV P1', id, 'Main Transformer Room', 'Active' from plants where plant_id = 'P1';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A003', 'MSB LV Room 420V P1', id, 'Main Switch Board Low Voltage', 'Active' from plants where plant_id = 'P1';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A004', 'Production Hygrometer P1', id, 'Temperature and Humidity Monitoring', 'Active' from plants where plant_id = 'P1';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A005', 'Solar Panel P1', id, 'Solar PV System', 'Active' from plants where plant_id = 'P1';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A006', 'Office FCU P1', id, 'Office Fan Coil Units', 'Active' from plants where plant_id = 'P1';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A007', 'AHU Room P1', id, 'Air Handling Units', 'Active' from plants where plant_id = 'P1';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A008', 'Chiller Room P1', id, 'Chiller Plant Room', 'Active' from plants where plant_id = 'P1';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A009', 'L11 Testing Bay P1', id, 'L11 Testing Bay Sub-Boards', 'Active' from plants where plant_id = 'P1';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A010', 'Production Line P1', id, 'Production Line Sub-Boards', 'Active' from plants where plant_id = 'P1';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A011', 'Consumer Room HT P2', id, 'High Voltage Consumer Room P2', 'Active' from plants where plant_id = 'P2';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A012', 'Transformer Room P2', id, 'Transformer Room Plant 2', 'Active' from plants where plant_id = 'P2';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A013', 'MSB LV Room P2', id, 'Main Switch Board LV Room P2', 'Active' from plants where plant_id = 'P2';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A014', 'Production Hygrometer P2', id, 'Temperature and Humidity Monitoring P2', 'Active' from plants where plant_id = 'P2';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A015', 'Solar Panel P2', id, 'Solar PV System P2', 'Active' from plants where plant_id = 'P2';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A016', 'Chiller Incoming 1', id, 'Chiller Plant Room P2', 'Active' from plants where plant_id = 'P2';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A017', 'Production Line L1 P2', id, 'Production Line DIP/GF P2', 'Active' from plants where plant_id = 'P2';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A018', 'Production Line L2 P2', id, 'Production Line SMT/SF P2', 'Active' from plants where plant_id = 'P2';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A019', 'AHU Room P1 (ACMV)', id, 'AHU Room P1 for ACMV works', 'Active' from plants where plant_id = 'P1';
+insert into areas (area_id, area_name, plant_id, description, status) select 'A020', 'AHU Room P2 (ACMV)', id, 'AHU Room P2 for ACMV works', 'Active' from plants where plant_id = 'P2';

@@ -1,0 +1,183 @@
+// One-time move of an EXISTING Supabase project into Cloudflare D1 + KV.
+//
+//   SUPABASE_URL=https://xxxx.supabase.co \
+//   SUPABASE_SERVICE_ROLE_KEY=eyJ... \
+//   PIN_PEPPER=<same value as the Worker secret> \
+//   node scripts/migrate-from-supabase.mjs
+//
+// Produces (in ./migration, which is git-ignored — it contains your data):
+//   migration/data.sql         all rows, ready for: npx wrangler d1 execute facility-db --remote --file=migration/data.sql
+//   migration/files/...        floor plan images downloaded from the "floorplans" bucket
+//   migration/upload-files.sh  wrangler commands that copy those images into KV
+//
+// Nothing is changed in Supabase. The service-role key is only read from the
+// environment on your computer; never put it in the app or in git.
+// IDs are kept, so links between inspections, staff and equipment stay intact.
+// Technician PINs are re-hashed with PIN_PEPPER (Supabase passwords cannot be
+// copied; staff keep signing in with the same 4-digit PIN).
+
+import fs from 'node:fs'
+import path from 'node:path'
+import { TABLES, toDb } from '../worker/schema.js'
+import { hashPin } from '../worker/auth.js'
+
+const URL_ = (process.env.SUPABASE_URL || '').replace(/\/$/, '')
+const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const PEPPER = process.env.PIN_PEPPER
+if (!URL_ || !KEY || !PEPPER || PEPPER.length < 16) {
+  console.error('Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and PIN_PEPPER (16+ chars, same as the Worker secret).')
+  process.exit(1)
+}
+const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
+const outDir = path.join(root, 'migration')
+fs.mkdirSync(path.join(outDir, 'files'), { recursive: true })
+const headers = { apikey: KEY, Authorization: `Bearer ${KEY}` }
+
+// FK-safe order.
+const ORDER = [
+  'plants', 'areas', 'equipment', 'technicians', 'checklist_templates',
+  'inspection_headers', 'inspection_details', 'photos', 'signatures', 'issues', 'alert_settings',
+  'fe_floors', 'fire_extinguishers', 'fe_checklist_templates', 'fe_inspections', 'fe_inspection_details',
+  'task_stages', 'tasks', 'facility_receipts', 'inspection_versions', 'inspection_corrections', 'inspection_reviews',
+]
+
+async function fetchTable(name) {
+  const rows = []
+  for (let from = 0; ; from += 1000) {
+    const res = await fetch(`${URL_}/rest/v1/${name}?select=*&offset=${from}&limit=1000`, { headers })
+    if (res.status === 404 || res.status === 400) {
+      const body = await res.text()
+      if (/does not exist|Could not find/i.test(body)) { console.warn(`  (table ${name} not found in Supabase — skipped)`); return null }
+      throw new Error(`${name}: ${res.status} ${body}`)
+    }
+    if (!res.ok) throw new Error(`${name}: ${res.status} ${await res.text()}`)
+    const page = await res.json()
+    rows.push(...page)
+    if (page.length < 1000) return rows
+  }
+}
+
+async function fetchAuthUsers() {
+  const users = []
+  for (let page = 1; ; page++) {
+    const res = await fetch(`${URL_}/auth/v1/admin/users?page=${page}&per_page=1000`, { headers })
+    if (!res.ok) throw new Error(`auth users: ${res.status} ${await res.text()}`)
+    const body = await res.json()
+    const list = body.users || []
+    users.push(...list)
+    if (list.length < 1000) return users
+  }
+}
+
+// ---- SQL writing. D1 limits one SQL statement to 100 KB, so long values
+// (photo evidence, snapshots) are appended in chunks with UPDATE ... || ...
+const CHUNK = 60000
+const lit = (v) => v === null || v === undefined ? 'NULL' : typeof v === 'number' ? String(v) : `'${String(v).replace(/'/g, "''")}'`
+const out = fs.createWriteStream(path.join(outDir, 'data.sql'))
+const w = (s) => out.write(s + '\n')
+
+function insert(name, row, pk = 'id') {
+  const cols = Object.keys(row)
+  const big = cols.filter((c) => typeof row[c] === 'string' && row[c].length > CHUNK)
+  const vals = cols.map((c) => (big.includes(c) ? "''" : lit(row[c])))
+  w(`INSERT INTO "${name}" (${cols.map((c) => `"${c}"`).join(', ')}) VALUES (${vals.join(', ')});`)
+  for (const c of big) {
+    for (let i = 0; i < row[c].length; i += CHUNK) {
+      w(`UPDATE "${name}" SET "${c}" = "${c}" || ${lit(row[c].slice(i, i + CHUNK))} WHERE "${pk}" = ${lit(row[pk])};`)
+    }
+  }
+}
+
+function convert(name, src) {
+  const t = TABLES[name]
+  const row = {}
+  for (const [c, type] of Object.entries(t.columns)) {
+    if (!(c in src)) continue
+    row[c] = toDb(type, src[c], c)
+  }
+  return row
+}
+
+function shrinkSnapshot(json) {
+  if (!json || json.length <= 1_500_000) return json
+  const s = JSON.parse(json)
+  s.details = (s.details || []).map((d) => (d.evidence ? { ...d, evidence: null, evidence_omitted: true } : d))
+  return JSON.stringify(s)
+}
+
+console.log('Reading Supabase…')
+const data = {}
+for (const name of ORDER) { process.stdout.write(`  ${name}… `); data[name] = await fetchTable(name); console.log(data[name] ? data[name].length : '-') }
+const authUsers = await fetchAuthUsers()
+console.log(`  auth users… ${authUsers.length}`)
+
+w('-- Generated by scripts/migrate-from-supabase.mjs on ' + new Date().toISOString())
+w('-- Clears the app tables (including the defaults created by the migration) and loads the Supabase data.')
+w('PRAGMA defer_foreign_keys = true;')
+for (const name of [...ORDER].reverse()) w(`DELETE FROM "${name}";`)
+w('DELETE FROM auth_users;')
+
+// auth users: keep ids (technicians.auth_uid, changed_by, reviewer_id all refer to them)
+const emails = new Set()
+for (const u of authUsers) {
+  if (!u.email) continue
+  emails.add(u.email.toLowerCase())
+  insert('auth_users', { id: u.id, email: u.email.toLowerCase(), created_at: toDb('timestamp', u.created_at) })
+}
+
+let pinCount = 0, created = 0
+for (const name of ORDER) {
+  let rows = data[name]
+  if (!rows) continue
+  if (name === 'tasks') {
+    // parents before sub-tasks
+    const byId = new Map(rows.map((r) => [r.id, r])), done = new Set(), sorted = []
+    const visit = (r) => { if (done.has(r.id)) return; done.add(r.id); if (r.parent_id && byId.has(r.parent_id)) visit(byId.get(r.parent_id)); sorted.push(r) }
+    rows.forEach(visit); rows = sorted
+  }
+  w(`-- ${name}: ${rows.length} rows`)
+  for (const src of rows) {
+    const row = convert(name, src)
+    if (name === 'technicians') {
+      if (!row.auth_uid && src.pin) {
+        // Technician without a Supabase login: create one so the PIN works.
+        const email = `${String(src.tech_id).toLowerCase()}@internal.app`
+        if (!emails.has(email)) {
+          const uid = crypto.randomUUID()
+          insert('auth_users', { id: uid, email }); emails.add(email); created++
+          row.auth_uid = uid
+        } else row.auth_uid = authUsers.find((u) => u.email?.toLowerCase() === email)?.id ?? null
+      }
+      if (src.pin && /^\d{4}$/.test(src.pin)) { row.pin_hash = await hashPin({ PIN_PEPPER: PEPPER }, src.pin); pinCount++ }
+    }
+    if (name === 'inspection_versions' && row.snapshot) row.snapshot = shrinkSnapshot(row.snapshot)
+    insert(name, row, TABLES[name].pk || 'id')
+  }
+}
+w('PRAGMA defer_foreign_keys = false;')
+await new Promise((r) => out.end(r))
+
+// ---- floor plan images
+const sh = ['#!/usr/bin/env bash', '# Copies floor plan images into the FILES KV namespace. Run from the facility-app folder.', 'set -e']
+let fileCount = 0
+for (const f of data.fe_floors || []) {
+  if (!f.image_path) continue
+  const res = await fetch(`${URL_}/storage/v1/object/floorplans/${f.image_path.split('/').map(encodeURIComponent).join('/')}`, { headers })
+  if (!res.ok) { console.warn(`  could not download floorplans/${f.image_path}: ${res.status}`); continue }
+  const local = path.join(outDir, 'files', 'floorplans', f.image_path)
+  fs.mkdirSync(path.dirname(local), { recursive: true })
+  fs.writeFileSync(local, Buffer.from(await res.arrayBuffer()))
+  const type = res.headers.get('content-type') || 'image/png'
+  sh.push(`npx wrangler kv key put --binding FILES --remote ${JSON.stringify('floorplans/' + f.image_path)} --path ${JSON.stringify(path.relative(root, local))} --metadata '${JSON.stringify({ contentType: type })}'`)
+  fileCount++
+}
+fs.writeFileSync(path.join(outDir, 'upload-files.sh'), sh.join('\n') + '\n', { mode: 0o755 })
+
+console.log(`\nDone.
+  migration/data.sql         ${pinCount} PINs re-hashed, ${created} missing logins created
+  migration/upload-files.sh  ${fileCount} floor plan image(s)
+
+Next:
+  npx wrangler d1 execute facility-db --remote --file=migration/data.sql
+  bash migration/upload-files.sh
+Delete the migration folder afterwards — it contains your data.`)
