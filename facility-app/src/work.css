@@ -71,8 +71,9 @@ progress::-webkit-progress-bar{background:#dce7f0}
 progress::-webkit-progress-value{background:#167bd6;border-radius:10px;transition:width .2s}
 .check-card{min-width:0;border:1px solid var(--work-line);border-radius:16px;background:#fff;padding:20px;margin:22px 0;transition:border .2s,box-shadow .2s}
 .check-card:focus-within{border-color:#84b6e5;box-shadow:0 0 0 3px #1b76ca0b}
-.check-card legend{font-size:16px;font-weight:650;color:var(--work-ink);padding:0 8px;max-width:100%}
-.check-number{display:inline-grid;place-items:center;background:#e7f1fc;color:#246194;width:28px;height:28px;border-radius:8px;font-size:13px;margin-right:10px}
+.check-card legend{float:left;width:100%;display:flex;align-items:flex-start;gap:10px;font-size:16px;font-weight:650;line-height:1.4;color:var(--work-ink);padding:0;margin:0 0 10px}
+.check-card legend+*{clear:both}
+.check-number{flex:0 0 28px;display:inline-grid;place-items:center;background:#e7f1fc;color:#246194;width:28px;height:28px;border-radius:8px;font-size:13px;margin-top:-2px}
 .check-flagged{border-color:#eab481;background:#fffcf8}
 .check-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 15px;font-size:14px;color:#536d82}
 .check-meta .pill{margin-left:auto}
