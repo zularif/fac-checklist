@@ -1,0 +1,37 @@
+{
+  "name": "facility-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:api": "node scripts/gen-setup-data.mjs && wrangler dev --port 8787",
+    "build": "node scripts/gen-setup-data.mjs && vite build",
+    "lint": "oxlint",
+    "preview": "npm run build && wrangler dev",
+    "db:migrate:local": "wrangler d1 migrations apply facility-db --local",
+    "db:migrate": "wrangler d1 migrations apply facility-db --remote",
+    "db:seed": "node scripts/make-seed.mjs && wrangler d1 execute facility-db --remote --file=seed/seed.sql",
+    "deploy": "npm run build && wrangler deploy",
+    "test:offline": "node tests/offline-test.mjs",
+    "test:worker": "node tests/worker-test.mjs"
+  },
+  "dependencies": {
+    "html5-qrcode": "^2.3.8",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.1",
+    "react-signature-canvas": "^1.1.0-alpha.2",
+    "recharts": "^3.10.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "oxlint": "^1.71.0",
+    "vite": "^8.1.1",
+    "vite-plugin-pwa": "^1.3.0",
+    "wrangler": "^4.40.0"
+  }
+}

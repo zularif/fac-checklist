@@ -1,0 +1,39 @@
+// Cloudflare deployment config: one Worker serves the PWA and the /api backend.
+// First-time setup is in DEPLOY-CLOUDFLARE.md.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "facility-checklist",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-01",
+  "observability": { "enabled": true },
+
+  // Built React app (npm run build -> dist/). Unknown paths fall back to
+  // index.html so client-side routes like /history work on refresh.
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/files/*"]
+  },
+
+  // D1 database. Replace database_id with the id printed by:
+  //   npx wrangler d1 create facility-db
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "facility-db",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // KV namespace for uploaded files (floor plan images). Replace id with the one printed by:
+  //   npx wrangler kv namespace create FILES
+  "kv_namespaces": [
+    { "binding": "FILES", "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID" }
+  ]
+
+  // Secrets (never put these in this file). Add them in the Cloudflare dashboard:
+  // Workers & Pages > facility-checklist > Settings > Variables and Secrets > Add (type: Secret)
+  //   JWT_SECRET, PIN_PEPPER, SETUP_KEY
+}
