@@ -83,14 +83,18 @@ export default function FloorMap() {
     return { x: Math.min(98, Math.max(2, x)), y: Math.min(98, Math.max(2, y)) }
   }
 
-  function pointToFloorCoords(clientX, clientY) {
+  // Screen point -> plan coordinates, without the edge clamp.
+  function rawFloorCoords(clientX, clientY) {
     const rect = imgRef.current.getBoundingClientRect()
     const fx = (clientX - rect.left) / rect.width
     const fy = (clientY - rect.top) / rect.height
     const rw = floor?.ref_width, rh = floor?.ref_height
-    const rawX = rw && rh ? fx * rw : fx * 100
-    const rawY = rw && rh ? fy * rh : fy * 100
-    const { x, y } = clampCoords(rawX, rawY)
+    return { x: rw && rh ? fx * rw : fx * 100, y: rw && rh ? fy * rh : fy * 100 }
+  }
+
+  function pointToFloorCoords(clientX, clientY) {
+    const raw = rawFloorCoords(clientX, clientY)
+    const { x, y } = clampCoords(raw.x, raw.y)
     return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 }
   }
 
@@ -196,7 +200,10 @@ export default function FloorMap() {
   function dragPinStart(e, u) {
     if (!editMode) return
     e.stopPropagation()
-    dragMeta.current = { id: u.id, startX: e.clientX, startY: e.clientY, moved: false }
+    // Remember where on the icon it was grabbed, so the icon doesn't jump to
+    // centre itself under the finger/cursor when the drag starts.
+    const p = rawFloorCoords(e.clientX, e.clientY)
+    dragMeta.current = { id: u.id, startX: e.clientX, startY: e.clientY, moved: false, offX: p.x - u.map_x, offY: p.y - u.map_y }
     setDraggingId(u.id)
   }
   function dragPinMove(e) {
@@ -208,7 +215,9 @@ export default function FloorMap() {
       if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return
       meta.moved = true
     }
-    const { x, y } = pointToFloorCoords(e.clientX, e.clientY)
+    const p = rawFloorCoords(e.clientX, e.clientY)
+    const c = clampCoords(p.x - (meta.offX || 0), p.y - (meta.offY || 0))
+    const x = Math.round(c.x * 10) / 10, y = Math.round(c.y * 10) / 10
     setUnits((prev) => prev.map((u) => (u.id === meta.id ? { ...u, map_x: x, map_y: y } : u)))
   }
   async function dragPinEnd() {
