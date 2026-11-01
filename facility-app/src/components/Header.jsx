@@ -84,8 +84,8 @@ export default function Header() {
 
   return (
     <>
-      <NavLink to="/sync" className={`connection-strip ${!online?'is-offline':''}`} aria-live="polite">{!online?'Offline — saved work stays on this device':pending?`${pending} upload(s) pending · View status`:'Online · Open Sync Centre'}</NavLink>
-      <nav className="work-bottom-nav" aria-label="Quick navigation">{[['/','Today'],['/scan','Scan QR'],['/sync','Sync'],['/history','History']].map(([to,label])=><NavLink key={to} to={to} end>{label}{to==='/sync'&&pending>0&&<span>{pending}</span>}</NavLink>)}</nav>
+      <NavLink to="/sync" className={`connection-strip ${!online?'is-offline':pending?'is-pending':'is-ok'}`} aria-live="polite">{!online?'Offline — saved work stays on this device':pending?`${pending} upload(s) pending · View status`:<><span className="conn-dot" aria-hidden="true" />Online · all work sent</>}</NavLink>
+      <nav className="work-bottom-nav" aria-label="Quick navigation">{[['/','Today','ti-checkbox'],['/scan','Scan','ti-qrcode'],['/sync','Sync','ti-cloud-upload'],['/history','History','ti-history']].map(([to,label,icon])=><NavLink key={to} to={to} end className={to==='/scan'?'nav-scan':undefined}><i className={`ti ${icon}`} aria-hidden="true" /><b>{label}</b>{to==='/sync'&&pending>0&&<span>{pending}</span>}</NavLink>)}</nav>
       {/* ---------- mobile / tablet top bar ---------- */}
       <header className="top-header">
         <button className="burger" aria-label="Open menu" onClick={() => setOpen(true)}>

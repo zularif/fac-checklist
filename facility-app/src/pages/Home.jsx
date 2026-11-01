@@ -43,7 +43,7 @@ export default function Home() {
   const [dueByCycle, setDueByCycle] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('All')
+  const [filter, setFilter] = useState('Pending') // show work still to do first
   const [cacheState, setCacheState] = useState({})
   const [allCache, setAllCache] = useState(() => allCacheInfo())
   const [allStatus, setAllStatus] = useState('') // '', 'caching', progress text
@@ -216,6 +216,52 @@ export default function Home() {
           {scanBtn}
         </div>
 
+        {/* phone: the main action comes first */}
+        <div className="phone-only-block">{scanBtn}</div>
+
+        {dueByCycle.length > 0 && (
+          <div className="cycle-due-wrap">
+            {dueByCycle.map((g) => (
+              <div className="cycle-due" key={g.cycle}>
+                <div className="cycle-due-head">
+                  <i className="ti ti-calendar-repeat" aria-hidden="true" />
+                  <span>{g.label}</span>
+                  <span className="cycle-due-count">{g.items.length}</span>
+                </div>
+                <div className="cycle-due-items">
+                  {g.items.map((e) => (
+                    <button className="cycle-due-item" key={e.id} onClick={() => navigate(`/asset/equipment/${e.equip_id}`)}>
+                      <span className="cycle-due-name">{e.equipment_name}</span>
+                      <span className="cycle-due-area">{e.area?.area_name || ''}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="stat-grid-4 stat-grid-3">
+          <div className="stat-card stat-progress">
+            <div className="stat-ic" style={{ background: 'var(--success-tint)', color: 'var(--success)' }}><i className="ti ti-circle-check" aria-hidden="true" /></div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p className="stat-val"><span style={{ color: 'var(--success)' }}>{totals.doneToday}</span><span className="stat-of"> of {totals.total} done</span></p>
+              <div className="progress" style={{ marginTop: 6 }} role="progressbar" aria-valuenow={progressPct} aria-valuemin={0} aria-valuemax={100} aria-label="Today's progress">
+                <span className={progressPct === 100 ? 'full' : ''} style={{ width: `${progressPct}%` }} />
+              </div>
+              <p className="stat-lbl">Today · {progressPct}%</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-ic" style={{ background: 'var(--blue-tint)', color: 'var(--blue)' }}><i className="ti ti-clipboard-list" aria-hidden="true" /></div>
+            <div><p className="stat-val" style={{ color: 'var(--blue)' }}>{totalPending}</p><p className="stat-lbl">Still due today</p></div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-ic" style={{ background: 'var(--warning-tint)', color: 'var(--warning)' }}><i className="ti ti-signature" aria-hidden="true" /></div>
+            <div><p className="stat-val" style={{ color: 'var(--warning)' }}>{totals.flaggedCount}</p><p className="stat-lbl">Awaiting sign-off</p></div>
+          </div>
+        </div>
+
         <DailyFocus />
         {loadError && <p role="status" className="work-notice">{loadError}</p>}
         {queued > 0 && (
@@ -242,50 +288,6 @@ export default function Home() {
             {allStatus && allStatus !== 'failed' ? '…' : allCache ? 'Refresh' : 'Download'}
           </button>
         </div>
-
-        <div className="stat-grid-4">
-          <div className="stat-card">
-            <div className="stat-ic" style={{ background: 'var(--blue-tint)', color: 'var(--blue)' }}><i className="ti ti-clipboard-list" aria-hidden="true" /></div>
-            <div><p className="stat-val" style={{ color: 'var(--blue)' }}>{totalPending}</p><p className="stat-lbl">Due today</p></div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-ic" style={{ background: 'var(--success-tint)', color: 'var(--success)' }}><i className="ti ti-circle-check" aria-hidden="true" /></div>
-            <div><p className="stat-val" style={{ color: 'var(--success)' }}>{totals.doneToday}</p><p className="stat-lbl">Submitted today</p></div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-ic" style={{ background: 'var(--warning-tint)', color: 'var(--warning)' }}><i className="ti ti-signature" aria-hidden="true" /></div>
-            <div><p className="stat-val" style={{ color: 'var(--warning)' }}>{totals.flaggedCount}</p><p className="stat-lbl">Awaiting sign-off</p></div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-ic" style={{ background: '#f1f5f9', color: '#475569' }}><i className="ti ti-percentage" aria-hidden="true" /></div>
-            <div><p className="stat-val">{progressPct}%</p><p className="stat-lbl">Today's progress</p></div>
-          </div>
-        </div>
-
-        {/* phone: big scan button */}
-        <div className="phone-only-block">{scanBtn}</div>
-
-        {dueByCycle.length > 0 && (
-          <div className="cycle-due-wrap">
-            {dueByCycle.map((g) => (
-              <div className="cycle-due" key={g.cycle}>
-                <div className="cycle-due-head">
-                  <i className="ti ti-calendar-repeat" aria-hidden="true" />
-                  <span>{g.label}</span>
-                  <span className="cycle-due-count">{g.items.length}</span>
-                </div>
-                <div className="cycle-due-items">
-                  {g.items.map((e) => (
-                    <button className="cycle-due-item" key={e.id} onClick={() => navigate(`/asset/equipment/${e.equip_id}`)}>
-                      <span className="cycle-due-name">{e.equipment_name}</span>
-                      <span className="cycle-due-area">{e.area?.area_name || ''}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '4px 0 8px', gap: 10, flexWrap: 'wrap' }}>
           <p className="section-label" style={{ margin: 0 }}>
@@ -352,7 +354,7 @@ export default function Home() {
 
                   <p className="list-card-meta">
                     <b>{a.done}</b>/{a.total} done
-                    {!complete && <> · <span style={{ color: 'var(--warning)' }}>{pending} pending</span></>}
+                    {!complete && <> · <span style={{ color: 'var(--blue)', fontWeight: 600 }}>{pending} to do</span></>}
                     {complete && <span className="tag-inline"><i className="ti ti-check" style={{ fontSize: 10 }} aria-hidden="true" /> Complete</span>}
                     {cs === 'ready' && <span className="tag-inline"><i className="ti ti-circle-check" style={{ fontSize: 10 }} aria-hidden="true" /> Offline</span>}
                   </p>

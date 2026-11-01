@@ -22,6 +22,7 @@ export default function History() {
 
   // filters
   const [search, setSearch] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
   const [techFilter, setTechFilter] = useState('All')
   const [areaFilter, setAreaFilter] = useState('All')
   const [resultFilter, setResultFilter] = useState('All') // All | Pass | Flagged
@@ -116,6 +117,8 @@ export default function History() {
     return true
   }), [rows, areaFilter, resultFilter, search])
 
+  const activeFilters = [techFilter !== 'All', mode === 'equipment' && areaFilter !== 'All', resultFilter !== 'All', !!from, !!to].filter(Boolean).length
+
   return (
     <div className="screen">
       <p className="page-title">History</p>
@@ -132,7 +135,13 @@ export default function History() {
       </div>
 
       {/* filters */}
-      <input placeholder={mode === 'equipment' ? 'Search equipment name' : 'Search FE code'} value={search} onChange={(e) => setSearch(e.target.value)} style={{ marginBottom: 8, maxWidth: 420 }} />
+      <div className="hist-search-row">
+        <input placeholder={mode === 'equipment' ? 'Search equipment name' : 'Search FE code'} value={search} onChange={(e) => setSearch(e.target.value)} />
+        <button type="button" className={activeFilters ? 'btn-primary' : 'btn-secondary'} aria-expanded={showFilters} onClick={() => setShowFilters((v) => !v)}>
+          <i className="ti ti-adjustments-horizontal" aria-hidden="true" />Filters{activeFilters ? ` (${activeFilters})` : ''}
+        </button>
+      </div>
+      <div className={'hist-filters' + (showFilters ? ' open' : '')}>
       <div className="btn-row" style={{ flexWrap: 'wrap' }}>
         <div className="field" style={{ flex: '1 1 150px', marginBottom: 8 }}>
           <label>Technician</label>
@@ -168,6 +177,8 @@ export default function History() {
           <label>To date</label>
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
         </div>
+      </div>
+      {activeFilters > 0 && <button type="button" className="btn-secondary" style={{ width: 'auto', marginBottom: 8 }} onClick={() => { setTechFilter('All'); setAreaFilter('All'); setResultFilter('All'); setFrom(''); setTo('') }}>Clear filters</button>}
       </div>
 
       {loading ? (

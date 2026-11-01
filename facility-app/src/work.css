@@ -76,7 +76,12 @@ progress::-webkit-progress-value{background:#167bd6;border-radius:10px;transitio
 .check-number{flex:0 0 28px;display:inline-grid;place-items:center;background:#e7f1fc;color:#246194;width:28px;height:28px;border-radius:8px;font-size:13px;margin-top:-2px}
 .check-flagged{border-color:#eab481;background:#fffcf8}
 .check-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 15px;font-size:14px;color:#536d82}
-.check-meta .pill{margin-left:auto}
+.check-meta .pill{margin-left:auto;font-size:13px;padding:4px 11px;font-weight:600}
+.check-meta .pill:not(.pill-ok):not(.pill-danger){background:#eef2f6;color:#3f566b}
+.num-input{position:relative;display:flex;align-items:center}
+.num-input input{width:100%;padding-right:64px;font-size:18px}
+.num-unit{position:absolute;right:14px;font-size:15px;font-weight:600;color:#3f566b;pointer-events:none}
+.num-input-bad input{border-color:#cc641b;background:#fff8f2}
 .check-card .choices{display:flex;gap:10px;flex-wrap:wrap}
 .check-card .ch{min-width:95px;padding:12px 18px;border:1px solid #cbdbe8;border-radius:10px;font-size:16px;flex:1}
 .check-card .ch.active{background:#e4f1ff;border-color:#1673ce;color:#125895;box-shadow:inset 0 0 0 1px #1673ce}
@@ -131,3 +136,28 @@ progress::-webkit-progress-value{background:#167bd6;border-radius:10px;transitio
  .app-shell.has-nav>.connection-strip{margin:0;order:0}
  .app-shell.has-nav>.app-body{order:1}
 }
+
+/* ===== UI review fixes ===== */
+/* readable small text */
+.pill{font-size:12px}
+.list-card-meta,.cycle-due-area{font-size:13px}
+.nav-sec{font-size:11px}
+/* status strip: slim when everything is sent */
+.connection-strip.is-ok{font-size:12px;padding-top:4px;padding-bottom:4px;min-height:0;background:#f2f8f4;color:#1d5b37;border-color:#d6eadc}
+.connection-strip.is-pending{background:#fff3d8;color:#6b4806;border-color:#f5da9f;font-weight:600}
+.conn-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;margin-right:6px;vertical-align:1px}
+/* bottom bar: icons + a prominent Scan button */
+@media(max-width:1023px){
+ .work-bottom-nav a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 3px;font-size:12px;position:relative}
+ .work-bottom-nav a i{font-size:22px}
+ .work-bottom-nav a b{font-weight:600}
+ .work-bottom-nav a span{position:absolute;top:2px;left:calc(50% + 6px);margin:0}
+ .work-bottom-nav a.nav-scan{background:#1673ce;color:#fff;margin-top:-18px;border-radius:16px;box-shadow:0 4px 12px #1673ce55}
+ .work-bottom-nav a.nav-scan.active{background:#125c9f;color:#fff}
+}
+/* history: search + Filters button; filters fold away on phones */
+.hist-search-row{display:flex;gap:8px;margin-bottom:8px;max-width:640px}
+.hist-search-row input{flex:1;min-width:0;margin:0}
+.hist-search-row button{width:auto;margin:0;flex:0 0 auto;padding:0 14px;min-height:44px}
+@media(max-width:1023px){.hist-filters{display:none}.hist-filters.open{display:block}}
+@media(min-width:1024px){.hist-search-row button{display:none}}

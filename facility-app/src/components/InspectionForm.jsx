@@ -19,6 +19,18 @@ async function photoData(file) {
   if(photo.length>440000) throw new Error('This image is too large. Choose a smaller photo.')
   return photo
 }
+// "Allowed: 31 to 35", "Minimum 31", "Maximum 35" — or nothing when no limits are set.
+const STATUS_LABEL = { OutOfRange: 'Out of range', OutOfSpec: 'Out of spec', Normal: 'OK' }
+
+function limitText(t) {
+  const has = (v) => v !== null && v !== undefined && v !== ''
+  const u = t.unit ? ` ${t.unit}` : ''
+  if (has(t.min_value) && has(t.max_value)) return `Allowed: ${t.min_value} to ${t.max_value}${u}`
+  if (has(t.min_value)) return `Minimum ${t.min_value}${u}`
+  if (has(t.max_value)) return `Maximum ${t.max_value}${u}`
+  return ''
+}
+
 export default function InspectionForm({kind='equipment'}) {
  const params=useParams(), [search]=useSearchParams(), navigate=useNavigate()
  const code=kind==='fe'?params.feCode:params.equipId
@@ -136,9 +148,9 @@ export default function InspectionForm({kind='equipment'}) {
    {(review?templates:visible).map((t,i)=>{
     const name=t.parameter_name,value=form.values[name]??'',status=statusFor(t,value),bad=isFlagged(status)
     const last=previous?.details?.find(d=>d.parameter_name===name)
-    return <fieldset className={`check-card ${bad?'check-flagged':''}`} key={t.id || name}><legend><span className="check-number">{i+1}</span>{name}{t.required && ' *'}</legend><div className="check-meta">{t.unit && <strong>{t.unit}</strong>}{t.type==='numeric' && <span>Allowed: {t.min_value??'—'} to {t.max_value??'—'}</span>}<span className={`pill ${bad?'pill-danger':value!==''?'pill-ok':''}`}>{status}</span></div>
+    return <fieldset className={`check-card ${bad?'check-flagged':''}`} key={t.id || name}><legend><span className="check-number">{i+1}</span>{name}{t.required && ' *'}</legend><div className="check-meta">{t.type==='numeric' && limitText(t) && <span>{limitText(t)}</span>}<span className={`pill ${bad?'pill-danger':value!==''?'pill-ok':''}`}>{STATUS_LABEL[status] || status}</span></div>
      {last && !correction && <p className="previous-reading">Previous: {last.value} {t.unit} · {new Date(previous.inspection_date).toLocaleDateString()}</p>}
-     {review?<p className="review-value">{value || 'Not checked'} {t.unit}</p>:t.type==='numeric'?<input aria-label={name} inputMode="decimal" type="number" step="any" required={t.required} value={value} onChange={e=>answer(name,e.target.value)}/>:<div className="choices">{choices(t).map(o=><button type="button" key={o} aria-pressed={value===o} className={`ch ${value===o?'active':''} ${value===o&&bad?'fail':''}`} onClick={()=>answer(name,o)}>{o}</button>)}</div>}
+     {review?<p className="review-value">{value || 'Not checked'} {t.unit}</p>:t.type==='numeric'?<div className={`num-input ${bad?'num-input-bad':''}`}><input aria-label={t.unit?`${name} (${t.unit})`:name} inputMode="decimal" type="number" step="any" required={t.required} value={value} onChange={e=>answer(name,e.target.value)}/>{t.unit && <span className="num-unit" aria-hidden="true">{t.unit}</span>}</div>:<div className="choices">{choices(t).map(o=><button type="button" key={o} aria-pressed={value===o} className={`ch ${value===o?'active':''} ${value===o&&bad?'fail':''}`} onClick={()=>answer(name,o)}>{o}</button>)}</div>}
      {(bad || form.comments[name] || form.photos[name]) && <div className="check-evidence">{review?<p>{form.comments[name]}</p>:<><label>Observation<textarea rows={2} value={form.comments[name] || ''} onChange={e=>setForm(f=>({...f,comments:{...f.comments,[name]:e.target.value}}))}/></label><label className="photo-control">Attach photo<input type="file" accept="image/*" capture="environment" onChange={async e=>{const file=e.target.files?.[0];if(!file)return;try {const data=await photoData(file);setForm(f=>({...f,photos:{...f.photos,[name]:data}}))}catch(err){setError(err.message)}}}/></label></>}{form.photos[name] && <><img className="evidence-photo" src={form.photos[name]} alt={`Observation for ${name}`}/>{!review&&<button type="button" className="btn-secondary" onClick={()=>setForm(f=>({...f,photos:{...f.photos,[name]:null}}))}>Remove photo</button>}</>}</div>}
     </fieldset>
    })}

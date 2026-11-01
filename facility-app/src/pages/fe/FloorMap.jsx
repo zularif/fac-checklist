@@ -444,56 +444,54 @@ export default function FloorMap() {
 
   return (
     <div className="screen">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-        <div>
-          <p className="page-title">Fire extinguishers</p>
-          <p className="page-sub">
-            {doneCount}/{units.length} inspected this month
-            {expiringCount > 0 && <span className="pill pill-warn" style={{ marginLeft: 6 }}>{expiringCount} expiring</span>}
-            {expiredCount > 0 && <span className="pill pill-danger" style={{ marginLeft: 6 }}>{expiredCount} expired</span>}
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 8, fontSize: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <span><span className="fe-dot fe-dot-ok" /> Inspected</span>
-          <span><span className="fe-dot fe-dot-pending" /> Pending</span>
-          <span><span className="fe-dot fe-dot-expiring" /> Expiring</span>
-          <span><span className="fe-dot fe-dot-expired" /> Expired</span>
-        </div>
-      </div>
+      <p className="page-title"><span className="hide-phone">Fire extinguishers</span><span className="show-phone">Extinguishers</span></p>
+      <p className="page-sub" style={{ marginBottom: 10 }}>
+        {doneCount}/{units.length} inspected this month
+        {expiringCount > 0 && <span className="pill pill-warn" style={{ marginLeft: 6 }}>{expiringCount} expiring</span>}
+        {expiredCount > 0 && <span className="pill pill-danger" style={{ marginLeft: 6 }}>{expiredCount} expired</span>}
+      </p>
 
-      <p className="field-label" style={{ marginTop: 8 }}>Building</p>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        {buildings.map((b) => (
-          <button key={b} className={building === b ? 'seg active' : 'seg'}
-            onClick={() => { setBuilding(b); setFloorId(floors.find((f) => f.building === b)?.id || '') }}>{b}</button>
-        ))}
-      </div>
-
-      <p className="field-label">Floor</p>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+      {/* Building and floor in one compact row */}
+      <div className="fe-picker" role="group" aria-label="Building and floor">
+        {buildings.length > 1 && <>
+          {buildings.map((b) => (
+            <button key={b} className={building === b ? 'chip active' : 'chip'} aria-pressed={building === b}
+              onClick={() => { setBuilding(b); setFloorId(floors.find((f) => f.building === b)?.id || '') }}>{b}</button>
+          ))}
+          <span className="fe-picker-sep" aria-hidden="true" />
+        </>}
         {floorsOfBuilding.map((f) => (
-          <button key={f.id} className={floorId === f.id ? 'seg active' : 'seg'} onClick={() => setFloorId(f.id)}>{f.floor_name}</button>
+          <button key={f.id} className={floorId === f.id ? 'chip active' : 'chip'} aria-pressed={floorId === f.id} onClick={() => setFloorId(f.id)}>
+            {buildings.length > 1 ? '' : `${f.building} · `}{f.floor_name}
+          </button>
         ))}
       </div>
 
-      <div className="btn-row" style={{ marginBottom: 10 }}>
+      {/* Actions in one small toolbar */}
+      <div className="fe-toolbar">
         <button className="btn-secondary" onClick={() => openDetailsList('floor')}>
-          <i className="ti ti-list-details" aria-hidden="true" />View all details
+          <i className="ti ti-list-details" aria-hidden="true" />List
         </button>
-      </div>
-
-      {isAdmin && (
-        <div className="btn-row" style={{ marginBottom: 10 }}>
+        {isAdmin && (
           <button className={editMode ? 'btn-primary' : 'btn-secondary'}
             onClick={() => { setEditMode(!editMode); setPendingPoint(null); setNewUnit(null); setSelectedEdit(null); setEditForm(null); setQuickPlace(false); setQuickSkip([]) }}>
             <i className={editMode ? 'ti ti-check' : 'ti ti-edit'} aria-hidden="true" />
-            {editMode ? 'Done editing' : 'Edit mode'}
+            {editMode ? 'Done' : 'Edit'}
           </button>
+        )}
+        {isAdmin && (
           <button className="btn-secondary" onClick={() => navigate('/fe/admin')}>
-            <i className="ti ti-settings" aria-hidden="true" />FE admin
+            <i className="ti ti-settings" aria-hidden="true" />Admin
           </button>
-        </div>
-      )}
+        )}
+      </div>
+
+      <div className="fe-legend">
+        <span><span className="fe-dot fe-dot-ok" /> Inspected</span>
+        <span><span className="fe-dot fe-dot-pending" /> To do</span>
+        <span><span className="fe-dot fe-dot-expiring" /> Expiring</span>
+        <span><span className="fe-dot fe-dot-expired" /> Expired</span>
+      </div>
 
       {editMode && !pendingPoint && !quickPlace && (
         <div className="banner-warn">Tap a pin to see its details. Press and drag a pin to move it. Tap an empty spot to add an extinguisher.</div>

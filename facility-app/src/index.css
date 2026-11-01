@@ -8,8 +8,8 @@
   --border: #e2e8f0;
   --border-strong: #cbd5e1;
   --text: #0f172a;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
+  --text-secondary: #526375;  /* ≥5.6:1 on white and light grey (was #64748b) */
+  --text-muted: #5f6f82;      /* ≥4.7:1 — was #94a3b8 (2.6:1, too faint) */
   --success: #16a34a;
   --success-tint: #dcfce7;
   --warning: #b45309;
@@ -95,7 +95,7 @@ body {
 .nav-badge { margin-left: auto; background: var(--danger); color: white; font-size: 10px; padding: 1px 7px; border-radius: 20px; }
 
 /* ---------- Blue greeting band ---------- */
-.hero-band { background: var(--blue); padding: 0 16px 22px; }
+.hero-band { background: var(--blue); padding: 12px 16px 22px; }
 .hero-band .greet { color: rgba(255,255,255,0.85); font-size: 12px; margin: 0; }
 .hero-band .name { color: white; font-size: 20px; font-weight: 500; margin: 2px 0 0; }
 
@@ -382,11 +382,11 @@ h1 { font-size: 22px; font-weight: 500; }
 }
 .fe-pin i { font-size: 14px; }
 .fe-pin-ok { background: var(--success); }
-.fe-pin-pending { background: var(--danger); }
+.fe-pin-pending { background: var(--blue); }
 .fe-pin-new { background: var(--blue); }
 .fe-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; }
 .fe-dot-ok { background: var(--success); }
-.fe-dot-pending { background: var(--danger); }
+.fe-dot-pending { background: var(--blue); }
 
 /* ---------- FE map: fullscreen + zoom ---------- */
 .fe-map-outer { position: relative; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: white; }
@@ -418,9 +418,9 @@ h1 { font-size: 22px; font-weight: 500; }
 
 /* FE pin + legend states including expiry */
 .fe-pin-expiring { background: #f59e0b; }
-.fe-pin-expired { background: #475569; }
+.fe-pin-expired { background: var(--danger); }
 .fe-dot-expiring { background: #f59e0b; }
-.fe-dot-expired { background: #475569; }
+.fe-dot-expired { background: var(--danger); }
 
 /* FE pins in edit mode */
 .fe-pin-edit { cursor: grab; box-shadow: 0 0 0 2px rgba(26,86,219,0.5), 0 1px 4px rgba(0,0,0,0.35); }
@@ -612,6 +612,8 @@ h1 { font-size: 22px; font-weight: 500; }
 
 @media (min-width: 1024px) {
   .stat-grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .stat-grid-3 { grid-template-columns: 2fr 1fr 1fr; }
+  .stat-grid-3 .stat-progress { grid-column: auto; }
   .card-grid { grid-template-columns: repeat(2, 1fr); }
   .page-head {
     display: flex; justify-content: space-between; align-items: center;
@@ -627,6 +629,9 @@ h1 { font-size: 22px; font-weight: 500; }
 
 .area-search { width: 180px; max-width: 50%; padding: 7px 10px; font-size: 12px; }
 .phone-only-block { margin-bottom: 12px; }
+.phone-only-block .btn-primary { min-height: 54px; font-size: 17px; }
+@media (max-width: 1023px) { .stat-grid-3 .stat-progress { grid-column: 1 / -1; } }
+.stat-of { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
 @media (min-width: 1024px) { .phone-only-block { display: none; } }
 
 /* ---------- FE details popup ---------- */
@@ -797,7 +802,7 @@ h1 { font-size: 22px; font-weight: 500; }
 .fe-lbl-exp { font-size: 7.5px; color: #475569; }
 .fe-lbl-exp.bad { color: var(--danger); font-weight: 700; }
 .fe-lbl-exp.warn { color: var(--warning); font-weight: 700; }
-.fe-lbl-sn { font-size: 7px; color: #94a3b8; }
+.fe-lbl-sn { font-size: 7px; color: #5f6f82; }
 
 /* =========================================================
    Tasks module
@@ -959,3 +964,14 @@ h1 { font-size: 22px; font-weight: 500; }
 .toast-x { background: transparent; border: none; color: rgba(255,255,255,0.8); cursor: pointer; padding: 0 0 0 4px; display: flex; }
 .toast-x i { font-size: 15px; }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ---------- FE map: compact controls (phone-first) ---------- */
+.fe-picker { display: flex; gap: 6px; align-items: center; overflow-x: auto; padding-bottom: 2px; margin-bottom: 8px; }
+.fe-picker .chip { flex: 0 0 auto; }
+.fe-picker-sep { flex: 0 0 1px; align-self: stretch; background: var(--border-strong); margin: 4px 2px; }
+.fe-toolbar { display: flex; gap: 8px; margin-bottom: 8px; }
+.fe-toolbar > button { flex: 1 1 0; width: auto; margin: 0; padding: 9px 10px; min-height: 42px; }
+.fe-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--text-secondary); margin: 0 0 8px; }
+@media (min-width: 1024px) { .fe-toolbar > button { flex: 0 0 auto; padding: 9px 18px; } }
+@media (max-width: 1023px) { .hide-phone { display: none; } }
+@media (min-width: 1024px) { .show-phone { display: none; } }
