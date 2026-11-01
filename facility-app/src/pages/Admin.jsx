@@ -37,6 +37,7 @@ const GROUPS = [
     items: [
       { to: '/staff', icon: 'ti-users', label: 'Manage staff', desc: 'Add, edit roles, reset PINs, deactivate', admin: true },
       { to: '/parts/import', icon: 'ti-file-import', label: 'Import spare parts', desc: 'Load parts and opening stock from Excel (CSV)', admin: true },
+      { to: '/parts/photos', icon: 'ti-photo-plus', label: 'Import part photos', desc: 'Upload many part photos at once, matched by part code', admin: true },
       { to: '/admin/database', icon: 'ti-database', label: 'Database update', desc: 'Install new tables after an app update', admin: true },
       { to: '/change-pin', icon: 'ti-key', label: 'Change my PIN', desc: 'Update your own 4-digit PIN' },
       { to: '/help', icon: 'ti-help-circle', label: 'Help & guide', desc: 'How to use the app' },

@@ -142,6 +142,13 @@ const storage = {
         return error ? { data: null, error } : { data: data.data, error: null }
       },
       getPublicUrl(path) { return { data: { publicUrl: `${API}/files/${bucket}/${enc(path)}` } } },
+      async remove(paths) {
+        for (const p of paths || []) {
+          const { error } = await request(`/api/storage/${bucket}/${enc(p)}`, null, { method: 'DELETE', raw: new Uint8Array(0) })
+          if (error) return { data: null, error }
+        }
+        return { data: paths, error: null }
+      },
     }
   },
 }

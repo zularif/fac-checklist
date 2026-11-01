@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { db } from '../../lib/db'
 import { useIsAdmin } from '../../lib/useIsAdmin'
-import { STORES, stockOf, photoUrl, partPath, resizePhoto, loadParts } from '../../lib/parts'
+import { STORES, stockOf, photoUrl, partPath, loadParts } from '../../lib/parts'
+import { compressImage, formatBytes } from '../../lib/image'
 
 const empty = { part_code: '', part_name: '', category: '', unit: 'pcs', brand: '', model: '', description: '' }
 
@@ -15,7 +16,8 @@ export default function PartForm() {
   const [part, setPart] = useState(null)
   const [form, setForm] = useState(empty)
   const [stock, setStock] = useState({ P1: { min_qty: '', location: '' }, P2: { min_qty: '', location: '' } })
-  const [photo, setPhoto] = useState(null) // { blob, preview }
+  const [photo, setPhoto] = useState(null) // { blob, preview, bytes, originalBytes }
+  const [compressing, setCompressing] = useState(false)
   const [categories, setCategories] = useState([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -36,7 +38,11 @@ export default function PartForm() {
 
   async function pickPhoto(file) {
     if (!file) return
-    try { const blob = await resizePhoto(file); setPhoto({ blob, preview: URL.createObjectURL(blob) }) } catch (e) { setError(e.message) }
+    setCompressing(true); setError('')
+    try {
+      const c = await compressImage(file)
+      setPhoto({ blob: c.blob, preview: URL.createObjectURL(c.blob), bytes: c.bytes, originalBytes: c.originalBytes, size: `${c.width}×${c.height}` })
+    } catch (e) { setError(e.message) } finally { setCompressing(false) }
   }
 
   async function save(e, status) {
@@ -53,8 +59,11 @@ export default function PartForm() {
         if (up.error) throw up.error
         values.photo_path = path
       }
+      const oldPhoto = photo && part?.photo_path && part.photo_path !== values.photo_path ? part.photo_path : null
       const { error: e2 } = await db.rpc('part_save', { id: part?.id, part: values, stock })
       if (e2) throw e2
+      // the replaced photo is no longer used: free its space
+      if (oldPhoto) await db.storage.from('parts').remove([oldPhoto]).catch(() => {})
       navigate(partPath(values.part_code), { replace: true })
     } catch (err) {
       setError(/duplicate key/i.test(err.message) ? `Part code ${form.part_code.toUpperCase()} already exists.` : err.message)
@@ -79,6 +88,8 @@ export default function PartForm() {
               <i className="ti ti-photo" aria-hidden="true" />{shownPhoto ? 'Change photo' : 'Add photo'}
               <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e) => pickPhoto(e.target.files?.[0])} />
             </label>
+            {compressing && <span className="page-sub" style={{ margin: 0 }}>Compressing photo…</span>}
+            {photo && !compressing && <span className="page-sub" style={{ margin: 0 }}>Compressed {formatBytes(photo.originalBytes)} → <b>{formatBytes(photo.bytes)}</b> ({photo.size})</span>}
           </div>
           <div className="form-grid">
             <label className="work-field">Part code *<input value={form.part_code} onChange={(e) => set('part_code', e.target.value)} placeholder="e.g. BRG-6204" required /></label>
@@ -107,7 +118,7 @@ export default function PartForm() {
         {!editing && <p className="page-sub">New parts start with 0 in stock. After saving, use <b>Receive</b> to add the stock you have.</p>}
 
         <div className="work-actions">
-          <button className="btn-primary" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save part'}</button>
+          <button className="btn-primary" type="submit" disabled={busy || compressing}>{busy ? 'Saving…' : 'Save part'}</button>
           {editing && part?.status === 'Active' && <button type="button" className="btn-secondary" disabled={busy} onClick={(e) => { if (window.confirm('Retire this part? It will be hidden from the list but its history is kept.')) save(e, 'Retired') }}>Retire part</button>}
           {editing && part?.status === 'Retired' && <button type="button" className="btn-secondary" disabled={busy} onClick={(e) => save(e, 'Active')}>Reactivate part</button>}
         </div>

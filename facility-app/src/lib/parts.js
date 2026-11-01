@@ -50,17 +50,8 @@ export async function recordMovement({ userId, part, kind, store, toStore, quant
   return res
 }
 
-// Make a photo small enough for quick loading on phones (longest side 1000px, JPEG).
-export async function resizePhoto(file, max = 1000) {
-  const img = await new Promise((resolve, reject) => {
-    const i = new Image(); i.onload = () => resolve(i); i.onerror = () => reject(new Error('Could not read that image.')); i.src = URL.createObjectURL(file)
-  })
-  const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight))
-  const c = document.createElement('canvas')
-  c.width = Math.round(img.naturalWidth * scale); c.height = Math.round(img.naturalHeight * scale)
-  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height)
-  return new Promise((resolve) => c.toBlob((b) => resolve(b), 'image/jpeg', 0.85))
-}
+// Part photos: compressed to about 800px / 120 KB before upload (see lib/image.js).
+export { compressImage } from './image'
 
 // ---------- CSV import ----------
 // Column names from the old workbook (or Excel in general) -> app fields.

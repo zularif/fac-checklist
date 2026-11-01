@@ -95,6 +95,12 @@ async function handleApi(request, env, url) {
     await env.FILES.put(key, body, { metadata: { contentType, uploadedBy: ctx.user.id, uploadedAt: new Date().toISOString() } })
     return json({ data: { path: m[2], fullPath: key } })
   }
+  if (method === 'DELETE' && (m = /^\/api\/storage\/([a-z]+)\/(.+)$/.exec(path))) {
+    const key = storageKey(m[1], m[2])
+    if (ctx.actor?.role !== 'Admin') throw apiError('permission denied: administrator required', '42501', 403)
+    await env.FILES.delete(key)
+    return json({ data: { path: m[2] } })
+  }
   throw apiError('Not found', 'NOT_FOUND', 404)
 }
 

@@ -1068,3 +1068,15 @@ h1 { font-size: 22px; font-weight: 500; }
   .side-nav, .work-bottom-nav, .connection-strip, .update-banner { display: none !important; }
   .screen { padding: 0 !important; }
 }
+
+/* bulk part photo import */
+.photo-match-list { display: grid; gap: 6px; max-height: 420px; overflow: auto; }
+.photo-match { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; }
+.photo-match small { display: block; color: var(--text-secondary); font-size: 12px; }
+.photo-match-file, .photo-match-part { min-width: 0; overflow: hidden; text-overflow: ellipsis; word-break: break-word; }
+.photo-match-state { font-size: 13px; text-align: right; }
+.photo-match-state.ok { color: #15803d; font-weight: 600; }
+.photo-match-state.error { color: var(--danger); font-weight: 600; }
+.photo-match-state.busy { color: var(--blue); }
+.photo-match-state.skip { color: var(--text-secondary); }
+@media (max-width: 600px) { .photo-match { grid-template-columns: 1fr 1fr; } .photo-match-state { grid-column: 1 / -1; text-align: left; } }

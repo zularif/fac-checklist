@@ -1,3 +1,4 @@
+import { compressImage, blobToDataUrl } from '../lib/image'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { db } from '../lib/db'
@@ -8,15 +9,12 @@ import { lookupByEquipId, lookupFeByCode, rememberAsset } from '../lib/offlineCa
 import { submitInspection } from '../lib/offlineQueue'
 import { choices, isFlagged, localDate, statusFor, validateAnswers } from '../lib/inspectionModel'
 
+// Observation photos are stored inside the inspection record (database), so
+// keep them small: about 800px and 100 KB.
 async function photoData(file) {
-  if (!file.type.startsWith('image/')) throw new Error('Choose an image file.')
-  const bitmap = await createImageBitmap(file)
-  const ratio = Math.min(1, 960 / Math.max(bitmap.width,bitmap.height))
-  const canvas=document.createElement('canvas'); canvas.width=bitmap.width*ratio;canvas.height=bitmap.height*ratio
-  canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close()
-  let photo=canvas.toDataURL('image/jpeg',.65)
-  if(photo.length>440000) photo=canvas.toDataURL('image/jpeg',.35)
-  if(photo.length>440000) throw new Error('This image is too large. Choose a smaller photo.')
+  const c = await compressImage(file, { maxSide: 800, targetBytes: 100 * 1024, minQuality: 0.4 })
+  const photo = await blobToDataUrl(c.blob)
+  if (photo.length > 440000) throw new Error('This image is too large. Choose a smaller photo.')
   return photo
 }
 // "Allowed: 31 to 35", "Minimum 31", "Maximum 35" — or nothing when no limits are set.
