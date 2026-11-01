@@ -125,6 +125,30 @@ export const TABLES = {
     touch: 'updated_at',
     read: 'active', write: 'any',
   },
+  parts: {
+    columns: {
+      id: U, part_code: T, part_name: T, category: T, description: T, brand: T, model: T, unit: T,
+      photo_path: T, qr_code: T, status: T, created_at: TS, updated_at: TS,
+    },
+    touch: 'updated_at',
+    read: 'active', write: 'admin',
+  },
+  part_stock: {
+    columns: { id: U, part_id: U, store: T, quantity: I, min_qty: I, location: T },
+    refs: { part_id: 'parts' },
+    // quantity is changed only by the stock_move / parts_import functions
+    insertable: ['id', 'part_id', 'store', 'min_qty', 'location'],
+    updatable: ['min_qty', 'location'],
+    read: 'active', write: 'admin', noDelete: true,
+  },
+  stock_movements: {
+    columns: {
+      id: U, group_id: U, part_id: U, kind: T, store: T, other_store: T, change: I, balance_after: I,
+      reason: T, equipment_id: U, technician_id: U, created_at: TS,
+    },
+    refs: { part_id: 'parts', equipment_id: 'equipment', technician_id: 'technicians' },
+    read: 'active', write: 'none',
+  },
   facility_receipts: {
     columns: { request_id: U, user_id: U, result: J, created_at: TS },
     pk: 'request_id', read: 'own', ownerColumn: 'user_id', write: 'none',

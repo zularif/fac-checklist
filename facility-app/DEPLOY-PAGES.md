@@ -91,3 +91,18 @@ Exactly as in `DEPLOY-BROWSER-ONLY.md` Part B: edit on GitHub (press `.` for the
 ## Pages or Worker — which is better?
 
 Both run the same code with the same free-plan limits. Pages is simpler to set up in the dashboard (no API token, bindings are point-and-click). Cloudflare now recommends Workers for new projects and adds new features there first, so `DEPLOY-BROWSER-ONLY.md` (Worker) remains the default. You can switch later: create the other project and bind it to the **same** `facility-db` database — no data is lost.
+
+---
+
+## After an app update that adds new features (e.g. Spare parts)
+
+Some updates add new database tables (a new file in `migrations/`). After the new version shows **Success** in Cloudflare:
+
+1. Sign in as an Admin → ☰ **Admin** → **Database update**.
+2. Press **Update database**. Existing data is not changed, and pressing it again is harmless.
+
+## Spare parts inventory
+
+- ☰ **Spare parts**: stock per part in **P1** and **P2**, low-stock filter, search.
+- Scan a part's QR (or open it) → **Take out**, **Receive**, **Transfer**, or **Count** (Admin).
+- Admin: **Add part** (with photo), **Import** from the old workbook (save as CSV UTF-8 first; "Quantity in stock" goes to P1), **QR labels** (photo + name + details, 3 per row on A4).

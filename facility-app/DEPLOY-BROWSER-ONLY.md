@@ -135,3 +135,18 @@ Worker → **Deployments** → click the failed build → read the red lines in 
 - **Backup / undo:** D1 → `facility-db` → **Time Travel** restores the database to any point in the last 30 days.
 - **Errors:** Worker → **Logs**.
 - **Staff, PINs, deactivating people:** in the app, Admin → Manage staff.
+
+---
+
+## After an app update that adds new features (e.g. Spare parts)
+
+Some updates add new database tables (a new file in `migrations/`). After the new version shows **Success** in Cloudflare:
+
+1. Sign in as an Admin → ☰ **Admin** → **Database update**.
+2. Press **Update database**. Existing data is not changed, and pressing it again is harmless.
+
+## Spare parts inventory
+
+- ☰ **Spare parts**: stock per part in **P1** and **P2**, low-stock filter, search.
+- Scan a part's QR (or open it) → **Take out**, **Receive**, **Transfer**, or **Count** (Admin).
+- Admin: **Add part** (with photo), **Import** from the old workbook (save as CSV UTF-8 first; "Quantity in stock" goes to P1), **QR labels** (photo + name + details, 3 per row on A4).

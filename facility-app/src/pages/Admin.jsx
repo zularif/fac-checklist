@@ -14,6 +14,7 @@ const GROUPS = [
     items: [
       { to: '/admin/qr-labels', icon: 'ti-qrcode', label: 'Equipment QR labels', desc: 'Print equipment QR labels by area' },
       { to: '/fe/qr-labels', icon: 'ti-qrcode', label: 'FE QR labels', desc: 'Print fire-extinguisher labels' },
+      { to: '/parts/labels', icon: 'ti-qrcode', label: 'Spare part QR labels', desc: 'Labels with photo, name and details', admin: true },
     ],
   },
   {
@@ -35,6 +36,8 @@ const GROUPS = [
     title: 'People & account',
     items: [
       { to: '/staff', icon: 'ti-users', label: 'Manage staff', desc: 'Add, edit roles, reset PINs, deactivate', admin: true },
+      { to: '/parts/import', icon: 'ti-file-import', label: 'Import spare parts', desc: 'Load parts and opening stock from Excel (CSV)', admin: true },
+      { to: '/admin/database', icon: 'ti-database', label: 'Database update', desc: 'Install new tables after an app update', admin: true },
       { to: '/change-pin', icon: 'ti-key', label: 'Change my PIN', desc: 'Update your own 4-digit PIN' },
       { to: '/help', icon: 'ti-help-circle', label: 'Help & guide', desc: 'How to use the app' },
     ],

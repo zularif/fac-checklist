@@ -28,6 +28,12 @@ const StaffManager = lazy(() => import('./pages/StaffManager'))
 const AreaManager = lazy(() => import('./pages/AreaManager'))
 const History = lazy(() => import('./pages/History'))
 const Setup = lazy(() => import('./pages/Setup'))
+const Parts = lazy(() => import('./pages/parts/Parts'))
+const PartDetail = lazy(() => import('./pages/parts/PartDetail'))
+const PartForm = lazy(() => import('./pages/parts/PartForm'))
+const PartsImport = lazy(() => import('./pages/parts/PartsImport'))
+const PartLabels = lazy(() => import('./pages/parts/PartLabels'))
+const DbUpdate = lazy(() => import('./pages/DbUpdate'))
 const FloorMap = lazy(() => import('./pages/fe/FloorMap'))
 const FEChecklist = lazy(() => import('./pages/fe/FEChecklist'))
 const FEAdmin = lazy(() => import('./pages/fe/FEAdmin'))
@@ -94,6 +100,13 @@ export default function App() {
           <Route path="/admin/reports" element={<Protected><Suspense fallback={<LazyFallback />}><Reports /></Suspense></Protected>} />
           <Route path="/admin/equipment" element={<Protected><Suspense fallback={<LazyFallback />}><EquipmentManager /></Suspense></Protected>} />
           <Route path="/admin/checklist/:equipId" element={<Protected><Suspense fallback={<LazyFallback />}><ChecklistManager /></Suspense></Protected>} />
+          <Route path="/parts" element={<Protected><Suspense fallback={<LazyFallback />}><Parts /></Suspense></Protected>} />
+          <Route path="/parts/new" element={<Protected><Suspense fallback={<LazyFallback />}><PartForm /></Suspense></Protected>} />
+          <Route path="/parts/import" element={<Protected><Suspense fallback={<LazyFallback />}><PartsImport /></Suspense></Protected>} />
+          <Route path="/parts/labels" element={<Protected><Suspense fallback={<LazyFallback />}><PartLabels /></Suspense></Protected>} />
+          <Route path="/parts/:code" element={<Protected><Suspense fallback={<LazyFallback />}><PartDetail /></Suspense></Protected>} />
+          <Route path="/parts/:code/edit" element={<Protected><Suspense fallback={<LazyFallback />}><PartForm /></Suspense></Protected>} />
+          <Route path="/admin/database" element={<Protected><Suspense fallback={<LazyFallback />}><DbUpdate /></Suspense></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </ErrorBoundary>

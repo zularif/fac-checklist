@@ -15,6 +15,7 @@ const sections = [
       { to: '/parameter-chart', icon: 'ti-chart-line', label: 'Parameter chart' },
       { to: '/history', icon: 'ti-history', label: 'History' },
       { to: '/tasks', icon: 'ti-checklist', label: 'Tasks' },
+      { to: '/parts', icon: 'ti-package', label: 'Spare parts' },
       { to: '/fe', icon: 'ti-fire-extinguisher', label: 'Fire extinguishers' },
       { to: '/fe/list', icon: 'ti-list-details', label: 'FE list & expiry' },
       { to: '/fe/expiry', icon: 'ti-calendar-exclamation', label: 'FE renewal & vendor' },

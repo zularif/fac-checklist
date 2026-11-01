@@ -5,9 +5,10 @@ import { useAuth } from '../context/AuthContext'
 import { useOffline } from '../context/OfflineContext'
 import { localDate } from '../lib/inspectionModel'
 export default function DailyFocus(){
- const {profile}=useAuth(),{drafts,items,online}=useOffline(),[tasks,setTasks]=useState([]),[returned,setReturned]=useState([]),[toReview,setToReview]=useState(null),[error,setError]=useState('')
+ const {profile}=useAuth(),{drafts,items,online}=useOffline(),[tasks,setTasks]=useState([]),[returned,setReturned]=useState([]),[toReview,setToReview]=useState(null),[lowStock,setLowStock]=useState(0),[error,setError]=useState('')
  useEffect(()=>{if(!profile?.id || !navigator.onLine)return;let alive=true;async function load(){
   const [t,r,f]=await Promise.all([db.from('tasks').select('*').eq('completed',false).eq('assigned_to',profile.id).order('due_date').limit(200),db.from('inspection_headers').select('id,status,equipment:equipment(equipment_name)').eq('technician_id',profile.id).eq('status','Returned'),db.from('fe_inspections').select('id,status,asset:fire_extinguishers(fe_code)').eq('technician_id',profile.id).eq('status','Returned')])
+  db.from('part_stock').select('part_id,quantity,min_qty').then(({data})=>{if(alive&&data)setLowStock(new Set(data.filter(s=>s.min_qty>0&&s.quantity<=s.min_qty).map(s=>s.part_id)).size)})
   if(['Admin','Supervisor'].includes(profile.role)){
    const head={count:'exact',head:true}
    const [a,b,c]=await Promise.all([db.from('inspection_headers').select('*',head).eq('status','Pending Sign-off'),db.from('fe_inspections').select('*',head).eq('status','Pending Sign-off'),db.from('inspection_corrections').select('*',head).eq('status','Pending')])
@@ -17,6 +18,6 @@ export default function DailyFocus(){
  }load();return()=>{alive=false}},[profile?.id,profile?.role])
  const pending=items.filter(x=>x.state!=='synced').length
  return <section className="daily-focus"><div className="work-section-head"><h2>Pick up where you left off</h2><Link to="/sync">Sync Centre →</Link></div><div className="focus-grid"><Link to="/sync" className="focus-tile"><span>Saved drafts</span><strong>{drafts.length}</strong><small>Continue an unfinished inspection →</small></Link><Link to="/sync" className="focus-tile"><span>Pending sync</span><strong>{pending}</strong><small>{pending?'Open to check delivery':'All local submissions sent'} →</small></Link><Link to="/tasks" className="focus-tile"><span>My open tasks</span><strong>{online?tasks.length:'—'}</strong><small>{!online?'Connect to refresh tasks':tasks.filter(t=>t.due_date && t.due_date<localDate()).length + ' overdue'} →</small></Link>{['Admin','Supervisor'].includes(profile?.role)&&<Link to="/signoff" className="focus-tile focus-review"><span>To review</span><strong>{toReview ?? '—'}</strong><small>Approvals & corrections →</small></Link>}</div>
- {error&&<p role="status">{error}</p>}{drafts.slice(0,3).map(d=><Link className="work-list-item" to={d.route} key={d.localKey}><strong>{d.label}</strong><span>Resume draft →</span></Link>)}{returned.map(r=><Link className="work-list-item attention" key={r.id} to={`/inspection/${r.kind}/${r.id}`}><strong>{r.label}</strong><span>Returned — review feedback →</span></Link>)}
+ {error&&<p role="status">{error}</p>}{drafts.slice(0,3).map(d=><Link className="work-list-item" to={d.route} key={d.localKey}><strong>{d.label}</strong><span>Resume draft →</span></Link>)}{lowStock>0&&<Link className="work-list-item attention" to="/parts?view=Low+stock"><strong>{lowStock} spare part{lowStock===1?' is':'s are'} low on stock</strong><span>View low stock →</span></Link>}{returned.map(r=><Link className="work-list-item attention" key={r.id} to={`/inspection/${r.kind}/${r.id}`}><strong>{r.label}</strong><span>Returned — review feedback →</span></Link>)}
  </section>
 }

@@ -297,6 +297,7 @@ export function translateDbError(err) {
   if (/UNIQUE constraint failed: ([\w.]+(, [\w.]+)*)/.test(m)) out = apiError(`duplicate key value violates unique constraint (${RegExp.$1})`, '23505', 409)
   else if (/FOREIGN KEY constraint failed/.test(m)) out = apiError('update or delete violates foreign key constraint: the record is still referenced by other records', '23503', 409)
   else if (/NOT NULL constraint failed: ([\w.]+)/.test(m)) out = apiError(`null value in column "${RegExp.$1.split('.').pop()}" violates not-null constraint`, '23502', 400)
+  else if (/no such table: (\w+)/.test(m)) out = apiError(`The database needs updating (table ${RegExp.$1} is missing). An administrator can run Admin → Database update.`, 'DB_UPDATE', 409)
   else if (/CHECK constraint failed: (\w+)/.test(m)) out = apiError(`check constraint failed: ${RegExp.$1}`, '23514', 409)
   else { out = apiError('Database error', 'DB', 500); console.error(err) }
   out.cause = err

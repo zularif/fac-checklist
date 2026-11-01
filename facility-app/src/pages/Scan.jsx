@@ -55,6 +55,10 @@ export default function Scan() {
   }
 
   async function resolveAndGo(code) {
+    // Spare part labels hold a web address like https://.../parts/BRG-6204
+    const partUrl = /\/parts\/([^/?#\s]+)/.exec(code)
+    if (partUrl) return `/parts/${partUrl[1]}`
+    if (/^PART-/i.test(code)) return `/parts/${encodeURIComponent(code.slice(5))}`
     // Offline-first: local cache before the network so it works in dead zones.
     const cached = lookupByQr(code)
     if (cached) return `/checklist/${cached.equipment.equip_id}`
@@ -66,6 +70,9 @@ export default function Scan() {
 
     const { data: fe } = await db.from('fire_extinguishers').select('fe_code').eq('qr_code', code).single()
     if (fe) return `/fe/checklist/${fe.fe_code}`
+
+    const { data: part } = await db.from('parts').select('part_code').eq('part_code', code.toUpperCase()).maybeSingle()
+    if (part) return `/parts/${encodeURIComponent(part.part_code)}`
 
     return null
   }
@@ -115,8 +122,8 @@ export default function Scan() {
       <button className="btn-secondary" style={{ width: 'auto', padding: '6px 12px', marginBottom: 12 }} onClick={async () => { await stopScanner(); navigate(-1) }}>
         <i className="ti ti-arrow-left" aria-hidden="true" />Back
       </button>
-      <p className="page-title">Scan equipment</p>
-      <p className="page-sub">Point the camera at the equipment or extinguisher QR label.</p>
+      <p className="page-title">Scan QR</p>
+      <p className="page-sub">Point the camera at an equipment, extinguisher or spare part QR label.</p>
 
       <div id={SCANNER_ID} className="qr-box" />
       {busy && <p className="page-sub" style={{ marginTop: 8 }}>Opening…</p>}
@@ -124,7 +131,7 @@ export default function Scan() {
 
       <p className="section-label">Or enter code manually</p>
       <div className="btn-row">
-        <input value={manualCode} onChange={(e) => setManualCode(e.target.value)} placeholder="EQ054 or QR-GF-OF-CO2-01"
+        <input value={manualCode} onChange={(e) => setManualCode(e.target.value)} placeholder="EQ054, QR-GF-OF-CO2-01 or a part code"
           onKeyDown={(e) => { if (e.key === 'Enter') manualGo() }} />
         <button type="button" className="btn-primary" style={{ flex: '0 0 auto', width: 'auto', padding: '10px 20px' }} onClick={manualGo} disabled={busy}>Go</button>
       </div>

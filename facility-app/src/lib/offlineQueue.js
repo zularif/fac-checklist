@@ -36,7 +36,10 @@ export async function flushQueue(retryErrors = false) {
       if (data.session?.user.id !== userId) break
       await localPut(item.localKey, { ...item, state:'syncing', attempts:item.attempts + 1 })
       try {
-        const { data:result, error } = await db.rpc('facility_save_inspection', { p:item.payload })
+        // Inspections use facility_save_inspection; other queued work (e.g. stock movements) names its own function.
+        const { data:result, error } = item.payload.rpc
+          ? await db.rpc(item.payload.rpc, { ...item.payload.args, request_id:item.payload.request_id })
+          : await db.rpc('facility_save_inspection', { p:item.payload })
         if (error) throw error
         await localPut(item.localKey, { ...item, state:'synced', syncedAt:Date.now(), error:null, result, attempts:item.attempts + 1 })
       } catch (err) {

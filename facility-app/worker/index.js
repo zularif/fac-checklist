@@ -15,10 +15,14 @@
 import { apiError } from './schema.js'
 import { runQuery } from './query.js'
 import { authenticate, loginWithPin, loginWithPassword, signToken } from './auth.js'
-import { RPC, FUNCTIONS } from './rpc.js'
-import { runSetup } from './setup.js'
+import { RPC as CORE_RPC, FUNCTIONS } from './rpc.js'
+import { runSetup, adminDbUpdate } from './setup.js'
+import { INVENTORY_RPC } from './inventory.js'
+
+const RPC = { ...CORE_RPC, ...INVENTORY_RPC }
 
 const BUCKETS = {
+  parts: { write: 'admin', publicRead: true },
   floorplans: { write: 'admin', publicRead: true },
   photos: { write: 'any', publicRead: false },
   signatures: { write: 'any', publicRead: false },
@@ -62,6 +66,8 @@ async function handleApi(request, env, url) {
   }
 
   if (!auth.user) throw apiError('Sign in required', 'PGRST301', 401)
+
+  if (path === '/api/admin/db-update' && (method === 'GET' || method === 'POST')) return json(await adminDbUpdate(ctx, method))
 
   if (method === 'POST' && path === '/api/query') return json(await runQuery(ctx, await readJson(request)))
 
