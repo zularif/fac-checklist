@@ -21,6 +21,8 @@ const sections = [
       { to: '/fe/expiry', icon: 'ti-calendar-exclamation', label: 'FE renewal & vendor' },
       // A separate standalone page (public/fire-alarm-sim.html), opened with a normal link.
       { href: '/fire-alarm-sim.html', icon: 'ti-alarm-smoke', label: 'Fire Alarm Simulator' },
+      // Standalone page too (public/fire-pump-sim.html).
+      { href: '/fire-pump-sim.html', icon: 'ti-gauge', label: 'Fire Pump Simulator' },
     ],
   },
   {
