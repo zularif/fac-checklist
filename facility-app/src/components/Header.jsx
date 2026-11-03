@@ -19,6 +19,8 @@ const sections = [
       { to: '/fe', icon: 'ti-fire-extinguisher', label: 'Fire extinguishers' },
       { to: '/fe/list', icon: 'ti-list-details', label: 'FE list & expiry' },
       { to: '/fe/expiry', icon: 'ti-calendar-exclamation', label: 'FE renewal & vendor' },
+      // A separate standalone page (public/fire-alarm-sim.html), opened with a normal link.
+      { href: '/fire-alarm-sim.html', icon: 'ti-alarm-smoke', label: 'Fire Alarm Simulator' },
     ],
   },
   {
@@ -65,7 +67,12 @@ export default function Header() {
       return (
         <div key={sec.label}>
           <p className="nav-sec">{sec.label}</p>
-          {items.map((item) => (
+          {items.map((item) => item.href ? (
+            <a key={item.href} href={item.href} className="nav-it" onClick={onNavigate} title={item.label}>
+              <i className={'ti ' + item.icon} aria-hidden="true" />
+              <span className="nav-text">{item.label}</span>
+            </a>
+          ) : (
             <NavLink
               key={item.to}
               to={item.to}
