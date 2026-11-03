@@ -102,6 +102,8 @@ svg.wires{position:absolute;z-index:1;inset:0;width:100%;height:100%;pointer-eve
 .chip{font-family:var(--f-mono);font-weight:700;font-size:calc(12*var(--u));padding:calc(3*var(--u)) calc(5*var(--u));border-radius:calc(4*var(--u));background:#dfe6ee;color:#4a5a6b;display:flex;align-items:center;white-space:nowrap}
 .chip.act{background:#1565c0;color:#fff;animation:blink 1s steps(1) infinite}
 .chip.low{background:#e09400;color:#fff}
+.chip.dch{background:#e65100;color:#fff;animation:blink 1s steps(1) infinite}
+.scr-list .w5{color:#ff9f43}
 .card.in.sup{animation:cardPre 1.2s steps(1) infinite}
 .card.in.sup .ph img{animation:devPre 1.2s steps(1) infinite}
 .card.in.sup .dot{background:#e09400;border-color:#e09400}
@@ -237,7 +239,7 @@ svg.wires{position:absolute;z-index:1;inset:0;width:100%;height:100%;pointer-eve
         <span><b>Single knock</b> (1 detector or call point): speaker announcement only.</span>
         <span><b>Pre-action</b>: a sprinkler burst only shows LOW PRESSURE (no outputs). A detector on its own does not open the valve. Sprinkler burst + smoke or heat detector opens the control valve, activates the water pressure switch and counts as a double knock.</span>
         <span><b>Double knock</b> (any 2 detectors / call points, FM200, sprinkler flow switch, or pre-action burst + detector): all outputs, including Trip AHU and Smoke Spill System.</span>
-        <span><b>FM200</b>: the FM200 room has its own smoke + heat detectors (cross-zoned). One detector = single knock (speaker only, agent not released). Both detectors = double knock: FM200 agent released and all outputs on.</span>
+        <span><b>FM200</b>: the FM200 room has its own smoke + heat detectors (cross-zoned). One detector = single knock (speaker only, agent not discharged). Both detectors = double knock: FM200 agent discharged and all outputs on.</span>
         <span><b>Disable</b> (⊘): isolates a device. The panel ignores any alarm from it and shows DISABLEMENT. Reset clears alarms but keeps disablements; tap ⊘ again to enable the device.</span>
       </div>
     </div>
@@ -263,7 +265,7 @@ const INPUTS=[
   {key:'pa',t:'Pre-Action Sprinkler System',s:'(Control Valve + Pressure Switch)',dev:[['PA-01','L1M401']],k:'pa',btn:'BURST'},
   {key:'mcp',t:'Manual Call Point (MCP)',s:'(Addressable)',dev:[['MCP-01','L1M101'],['MCP-02','L1M102']],k:'knock'},
   {key:'fmz',t:'FM200 Zone Detectors',s:'(Smoke + Heat · Cross-Zoned)',dev:[['FM-SD','L1D201'],['FM-HD','L1D202']],k:'knock'},
-  {key:'fm200',t:'FM200 Release Module',s:'(Agent Release / Status)',dev:[['FM200','L1M201']],k:'direct'},
+  {key:'fm200',t:'FM200 Discharge Module',s:'(Agent Discharge / Status)',dev:[['FM200','L1M201']],k:'direct'},
   {key:'flow',t:'Sprinkler Flow Switch',s:'(Monitored via I/O Module)',dev:[['FS-01','L1M301']],k:'direct'},
 ];
 const OUTPUTS=[
@@ -347,11 +349,11 @@ function evaluate(){
   const prev=S.stage;
   c.paFire=c.low&&c.valve;
   S.stage=(c.directs.length||c.knocks>=2||c.paFire)?2:c.knocks===1?1:0;
-  if(c.fmRelease!==!!S.fm){S.fm=c.fmRelease;log(c.fmRelease?'fire':'ok',c.fmRelease?(c.fmz===2?'FM200 cross-zone confirmed (smoke + heat) · FM200 AGENT RELEASE':'FM200 AGENT RELEASE (release module)'):'FM200 release cleared · agent standby')}
+  if(c.fmRelease!==!!S.fm){S.fm=c.fmRelease;log(c.fmRelease?'fire':'ok',c.fmRelease?(c.fmz===2?'FM200 cross-zone confirmed (smoke + heat) · FM200 AGENT DISCHARGE':'FM200 AGENT DISCHARGE (discharge module)'):'FM200 discharge cleared · agent standby')}
   if(c.valve!==S.valve){S.valve=c.valve;log(c.valve?'fire':'ok',c.valve?'PRE-ACTION control valve OPENED (sprinkler burst + detector) · water pressure switch ACTIVE':'Pre-action control valve CLOSED · pressure switch normal')}
   if(S.stage!==prev){
     if(S.stage===2){S.sil=false;log('fire',c.fmz===2&&c.knocks===2&&!c.directs.length&&!c.paFire?'DOUBLE KNOCK · both FM200 zone detectors (smoke + heat) · ALL OUTPUTS ON':c.paFire&&c.knocks<2&&!c.directs.length?'DOUBLE KNOCK · pre-action sprinkler burst + detector · water discharging · ALL OUTPUTS ON':c.directs.length&&c.knocks<2?`DOUBLE KNOCK · confirmed by ${c.directs.map(d=>d.id).join(', ')} · ALL OUTPUTS ON`:`DOUBLE KNOCK · ${c.knocks} devices in alarm · ALL OUTPUTS ON`)}
-    else if(S.stage===1)log('pre',c.fmz===1?'SINGLE KNOCK · 1 FM200 zone detector · pre-alarm · speaker announcement ON · agent NOT released':'SINGLE KNOCK · pre-alarm · speaker announcement ON');
+    else if(S.stage===1)log('pre',c.fmz===1?'SINGLE KNOCK · 1 FM200 zone detector · pre-alarm · speaker announcement ON · agent NOT discharged':'SINGLE KNOCK · pre-alarm · speaker announcement ON');
     else log('ok','No devices in alarm · outputs OFF');
   }
   render();audio();voice();
@@ -369,7 +371,7 @@ function render(){
       b.setAttribute('aria-pressed',S.on.has(id));b.classList.toggle('dis',off);b.title=off?`${id} is disabled — the panel ignores it`:'';
       z.setAttribute('aria-pressed',off);const zl=(off?'Enable ':'Disable ')+id;z.title=zl;z.setAttribute('aria-label',zl)});
   });
-  const ca=$('#c-agent');ca.textContent=fmRelease?'RELEASED':fmz===1?'1 OF 2':'STANDBY';ca.className='chip'+(fmRelease?' act':fmz===1?' low':'');
+  const ca=$('#c-agent');ca.textContent=fmRelease?'DISCHARGED':fmz===1?'1 OF 2':'STANDBY';ca.className='chip'+(fmRelease?' dch':fmz===1?' low':'');
   const cv=$('#c-valve'),cp=$('#c-ps');
   cv.textContent='Valve: '+(valve?'OPEN':'closed');cv.className='chip'+(valve?' act':'');
   cp.textContent=valve?'PS: ACTIVE':(low?'Air: LOW':'PS: normal');cp.className='chip'+(valve?' act':low?' low':'');
@@ -398,7 +400,7 @@ function render(){
   if(low)lines.push(`<div class="w3">SUPV L1M401 LOW AIR PRESSURE</div>`);
   if(valve)lines.push(`<div class="w2">PRE-ACTION VALVE OPEN</div><div class="w2">WATER PRESSURE SW ACTIVE</div>`);
   if(valve&&low)lines.push(`<div class="w2">WATER DISCHARGING AT BURST HEAD</div>`);
-  if(fmRelease)lines.push(`<div class="w2">FM200 RELEASED${fmz===2?' · CROSS-ZONE':''}</div>`);
+  if(fmRelease)lines.push(`<div class="w5">FM200 DISCHARGED${fmz===2?' · CROSS-ZONE':''}</div>`);
   else if(fmz===1)lines.push(`<div class="w3">FM200 1 OF 2 · AWAIT 2ND DET</div>`);
   ALL_DEV.filter(d=>S.dis.has(d.id)).forEach(d=>lines.push(`<div class="w4">DISB ${d.addr} ${d.id.padEnd(6,' ')} DISABLED${S.on.has(d.id)?' · ACTIVE':''}</div>`));
   $('#scr-list').innerHTML=lines.length?lines.slice(0,7).join('')+(lines.length>7?`<div class="dim">+${lines.length-7} more</div>`:''):'<div class="dim">No active events</div>';
@@ -409,8 +411,8 @@ function render(){
   else if(s===0&&nDis){$('#stage').className='stage s1';$('#pill').textContent='Disablement'}
   const disNote=nDis?` ${nDis} device${nDis===1?' is':'s are'} disabled — the panel ignores ${nDis===1?'it':'them'}.`:'';
   $('#stage-txt').textContent=(s===0?(calc().low?'Sprinkler head burst on the pre-action system. Panel shows LOW PRESSURE (supervisory). No output devices activate.':nDis?'No devices in alarm.':'System normal. No devices in alarm.'):
-    s===1?(fmz===1?'1 FM200 zone detector in alarm. Single knock: only the speaker announcement is active. FM200 is NOT released until the second detector (smoke + heat) confirms.':'1 device in alarm. Pre-alarm: only the speaker announcement is active while the alarm is checked.'):
-    (fmz===2&&knocks===2&&!directs.length&&!(valve&&low)?'Both FM200 zone detectors (smoke + heat) in alarm: cross-zone confirmed, FM200 agent released. Double knock, all outputs activated.':valve&&low&&knocks<2&&!directs.length?'Pre-action sprinkler burst plus detector: valve open and water discharging. Double knock, all outputs activated.':directs.length&&knocks<2?`Fire confirmed by ${directs.map(d=>d.g.t).join(' + ')}. All outputs activated.`:`${knocks} devices in alarm. Fire confirmed. All outputs activated.`))+disNote;
+    s===1?(fmz===1?'1 FM200 zone detector in alarm. Single knock: only the speaker announcement is active. FM200 is NOT discharged until the second detector (smoke + heat) confirms.':'1 device in alarm. Pre-alarm: only the speaker announcement is active while the alarm is checked.'):
+    (fmz===2&&knocks===2&&!directs.length&&!(valve&&low)?'Both FM200 zone detectors (smoke + heat) in alarm: cross-zone confirmed, FM200 agent discharged. Double knock, all outputs activated.':valve&&low&&knocks<2&&!directs.length?'Pre-action sprinkler burst plus detector: valve open and water discharging. Double knock, all outputs activated.':directs.length&&knocks<2?`Fire confirmed by ${directs.map(d=>d.g.t).join(' + ')}. All outputs activated.`:`${knocks} devices in alarm. Fire confirmed. All outputs activated.`))+disNote;
   $('#k-sil').setAttribute('aria-pressed',S.sil);$('#k-ack').setAttribute('aria-pressed',S.ack);$('#scr').classList.toggle('ack',S.ack);
 }
 $('#k-reset').addEventListener('click',()=>{if(!S.on.size&&!S.stage)return;S.on.clear();S.sil=false;S.ack=false;S.stage=0;S.valve=false;S.fm=false;log('ok','PANEL RESET · all devices restored · outputs OFF'+(S.dis.size?` · ${S.dis.size} disablement${S.dis.size===1?'':'s'} kept`:''));evaluate()});
