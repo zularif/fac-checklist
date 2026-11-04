@@ -162,6 +162,42 @@ label.f{display:flex;flex-direction:column;gap:3px;font-size:12.5px;font-weight:
 .type-fire{border-left:5px solid var(--fire)} .type-pre{border-left:5px solid var(--warn)} .type-sup{border-left:5px solid #c9a227}
 .hint{font-size:13px;color:var(--muted);margin:0}
 .rule-item{grid-template-columns:1fr}
+.vsw{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mk{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 4px;border-radius:5px;font:700 12.5px var(--f-mono);background:var(--accent);color:#fff}
+.mk.on{background:var(--ok)} .mk.dl{background:var(--warn);gap:2px;display:inline-flex;align-items:center}
+.mk.dl input{width:44px!important;padding:1px 3px!important;font:700 12px var(--f-mono)!important;border:0!important;border-radius:3px!important;text-align:center}
+.mx-wrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:8px}
+table.mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%}
+.mx th,.mx td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:4px 6px;text-align:center;background:var(--surface)}
+.mx thead th{position:sticky;top:0;z-index:3;background:var(--surface-2);font-weight:700}
+.mx thead tr:nth-child(2) th{top:31px}
+.mx .gh.in{background:color-mix(in srgb,#1d4f91 16%,var(--surface-2))} .mx .gh.out{background:color-mix(in srgb,#1e6b3a 16%,var(--surface-2))}
+.mx th.vt{height:150px;vertical-align:bottom;padding:6px 2px;min-width:34px}
+.mx th.vt span{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;font-weight:600;font-size:12.5px}
+.mx .stk{position:sticky;left:0;z-index:2;text-align:left;min-width:300px}
+.mx thead .stk{z-index:4}
+.mx .rn{display:flex;gap:4px;align-items:center}
+.mx .rn input{font-size:13px!important;padding:5px 7px!important}
+.mx .x{border:0;background:none;color:var(--fire);font-size:18px;cursor:pointer;line-height:1;padding:2px 4px}
+.mx td.c{cursor:pointer;min-width:34px;height:36px}
+.mx td.c:hover{background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.mx td.c.in.set{background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.mx td.c.out.set{background:color-mix(in srgb,var(--ok) 14%,var(--surface))}
+.mx td.need{white-space:nowrap}
+.mx td.need label{display:inline-flex;align-items:center;gap:2px;margin:1px 3px}
+.mx td.need input{width:48px!important;padding:3px 4px!important}
+.mx tr.r-fire .stk{box-shadow:inset 4px 0 0 var(--fire)} .mx tr.r-pre .stk{box-shadow:inset 4px 0 0 var(--warn)} .mx tr.r-sup .stk{box-shadow:inset 4px 0 0 #c9a227}
+.tsel{font-weight:700!important;width:auto!important}
+.tsel.t-fire{color:var(--fire)!important} .tsel.t-pre{color:var(--warn)!important} .tsel.t-sup{color:#a8860f!important}
+.rhead{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rhead .rname{flex:1 1 260px;font-weight:700!important;font-size:15px!important}
+.sent{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14.5px;border:1px dashed var(--line);border-radius:8px;padding:8px 10px;background:var(--surface)}
+.sent>input{width:64px!important}
+.sent .checks{flex-basis:100%}
+.kw{font:700 14px var(--f-head);letter-spacing:.08em;background:#1d4f91;color:#fff;padding:2px 9px;border-radius:4px}
+.kw.then{background:#1e6b3a}
+.dly{display:inline-flex;align-items:center;gap:3px;margin-left:4px;font-size:12px;color:var(--muted)}
+.dly input{width:52px!important;padding:2px 4px!important;font-size:12.5px!important}
 .voices{display:flex;flex-direction:column;gap:8px}
 .vrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:8px;align-items:center}
 @media (prefers-reduced-motion:reduce){*{animation-duration:2s!important}}
@@ -242,10 +278,8 @@ const DEFAULT_CONFIG={
     {id:'r1',name:'Pre-action release (sprinkler burst + detector)',type:'fire',when:[{groups:['pa'],min:1},{groups:['smoke','heat'],min:1}],outputs:['bell','speaker','strobe','shutter','lift','door'],screen:'FIRE ALARM',lines:'PRE-ACTION VALVE OPEN\nWATER PRESSURE SW ACTIVE\nWATER DISCHARGING AT BURST HEAD',voice:'evac'},
     {id:'r2',name:'Double knock (2 detectors / call points)',type:'fire',when:[{groups:['smoke','heat','mcp'],min:2}],outputs:['bell','speaker','strobe','shutter','lift','door'],screen:'FIRE ALARM',lines:'',voice:'evac'},
     {id:'f1',name:'FM200 gas discharged (discharge signal)',type:'fire',when:[{groups:[],points:['DS-01'],min:1}],outputs:['bell','speaker','strobe','shutter','lift','door','lamp'],screen:'GAS DISCHARGED',lines:'FM200 GAS DISCHARGED · DO NOT ENTER',voice:'evac'},
-    {id:'f2',name:'FM200 release after countdown (cross-zone)',type:'fire',when:[{groups:[],points:['FSD-01','FHD-01'],min:2}],delay:30,outputs:['release'],screen:'FM200 RELEASE',lines:'FM200 RELEASE SOLENOID FIRED',voice:''},
-    {id:'f3',name:'FM200 release after countdown (discharge button)',type:'fire',when:[{groups:[],points:['MDB-01'],min:1}],delay:30,outputs:['release'],screen:'FM200 RELEASE',lines:'FM200 RELEASE SOLENOID FIRED',voice:''},
-    {id:'f4',name:'FM200 cross-zone fire (smoke + heat)',type:'fire',when:[{groups:[],points:['FSD-01','FHD-01'],min:2}],outputs:['bell','speaker','strobe','shutter','lift','door'],screen:'FIRE ALARM',lines:'FM200 CROSS-ZONE CONFIRMED',voice:'evac'},
-    {id:'f5',name:'FM200 discharge button',type:'fire',when:[{groups:[],points:['MDB-01'],min:1}],outputs:['bell','speaker','strobe','shutter','lift','door'],screen:'FIRE ALARM',lines:'FM200 MANUAL DISCHARGE ACTIVATED',voice:'evac'},
+    {id:'f4',name:'FM200 cross-zone fire (smoke + heat)',type:'fire',when:[{groups:[],points:['FSD-01','FHD-01'],min:2}],outputs:['bell','speaker','strobe','shutter','lift','door','release'],delays:{release:30},screen:'FIRE ALARM',lines:'FM200 CROSS-ZONE CONFIRMED',voice:'evac'},
+    {id:'f5',name:'FM200 discharge button',type:'fire',when:[{groups:[],points:['MDB-01'],min:1}],outputs:['bell','speaker','strobe','shutter','lift','door','release'],delays:{release:30},screen:'FIRE ALARM',lines:'FM200 MANUAL DISCHARGE ACTIVATED',voice:'evac'},
     {id:'r4',name:'Sprinkler water flow',type:'fire',when:[{groups:['flow'],min:1}],outputs:['bell','speaker','strobe','shutter','lift','door'],screen:'FIRE ALARM',lines:'SPRINKLER WATER FLOW',voice:'evac'},
     {id:'r5',name:'Single knock (1 detector / call point)',type:'pre',when:[{groups:['smoke','heat','mcp'],min:1}],outputs:['speaker'],screen:'PRE-ALARM',lines:'',voice:'stay'},
     {id:'f6',name:'FM200 pre-alarm (1 FM200 detector)',type:'pre',when:[{groups:[],points:['FSD-01','FHD-01'],min:1}],outputs:['bell','speaker'],screen:'FM200 PRE-ALARM',lines:'',voice:'stay'},
@@ -259,10 +293,10 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const uid=p=>p+Math.random().toString(36).slice(2,8);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $=s=>document.querySelector(s);
-let saved=clone(DEFAULT_CONFIG), draft=null, rev=0, ASSETS={...DEF_ASSETS}, pending={}, source='default';
-const cfg=()=>draft||saved;
+let saved=null, draft=null, rev=0, ASSETS={...DEF_ASSETS}, pending={}, source='default';
+const cfg=()=>draft||(saved||(saved=normalise(clone(DEFAULT_CONFIG))));
 const asset=id=>pending[id]||ASSETS[id]||'';
-const S={on:new Set(),sil:false,ack:false,matched:new Set(),top:0,log:[],since:{},cd:new Set()};
+const S={on:new Set(),sil:false,ack:false,matched:new Set(),top:0,log:[],since:{},cd:new Set(),dOn:new Set()};
 
 /* ---------- diagram ---------- */
 const NS='http://www.w3.org/2000/svg';
@@ -331,25 +365,25 @@ function compute(){
   const C=cfg();
   const cnt=k=>{const g=C.inputs.find(x=>x.key===k);return g?g.points.filter(p=>S.on.has(p.id)).length:0};
   const t=Date.now(), counting=[];
+  const delayed=[];
   const matched=C.rules.filter(r=>{
     const ok=r.when.length&&r.when.every(c=>{const s=cset(c);return s.size&&[...s].filter(id=>S.on.has(id)).length>=Math.max(1,+c.min||1)});
-    if(!ok){delete S.since[r.id];return false}
-    const d=Math.max(0,+r.delay||0);if(!d)return true;
-    if(!S.since[r.id])S.since[r.id]=t;
-    const left=Math.ceil(d-(t-S.since[r.id])/1000);
-    if(left>0){counting.push({r,left});return false}
+    if(!ok){Object.keys(S.since).forEach(k=>{if(k.startsWith(r.id+'|'))delete S.since[k]});return false}
     return true;
   });
+  const live=(r,o)=>{const d=Math.max(0,+(r.delays||{})[o]||0);if(!d)return true;const k=r.id+'|'+o;
+    if(!S.since[k])S.since[k]=t;const left=Math.ceil(d-(t-S.since[k])/1000);
+    if(left>0){counting.push({r,o,left,d});return false}delayed.push({r,o,d,k});return true};
   const sorted=[...matched].sort((a,b)=>TYPE[b.type].rank-TYPE[a.type].rank);
   const top=sorted[0]||null;
   const outState={},inState={};
   matched.forEach(r=>{
-    r.outputs.forEach(o=>{if(!outState[o]||TYPE[r.type].rank>TYPE[outState[o]].rank)outState[o]=r.type});
+    r.outputs.forEach(o=>{if(!live(r,o))return;if(!outState[o]||TYPE[r.type].rank>TYPE[outState[o]].rank)outState[o]=r.type});
     r.when.forEach(c=>{const s=cset(c);C.inputs.forEach(g=>{const k=g.key;if(g.points.some(p=>s.has(p.id)&&S.on.has(p.id))&&(!inState[k]||TYPE[r.type].rank>TYPE[inState[k]].rank))inState[k]=r.type})});
   });
   const vr=sorted.find(r=>r.voice&&C.voices.some(v=>v.id===r.voice));
   const pts=C.inputs.flatMap(g=>g.points.filter(p=>S.on.has(p.id)).map(p=>({g,p})));
-  return {matched,sorted,top,outState,inState,voice:vr?vr.voice:null,pts,counting};
+  return {matched,sorted,top,outState,inState,voice:vr?vr.voice:null,pts,counting,delayed};
 }
 function now(){return new Date().toLocaleTimeString('en-GB',{hour12:false})}
 function log(cls,txt){S.log.unshift({t:now(),cls,txt});if(S.log.length>200)S.log.pop();renderLog()}
@@ -363,7 +397,7 @@ function toggle(id){
   log(on?'fire':'ok',on?`ALARM ${id} ${f.g.name}${f.p.label?' · '+f.p.label:''} (${f.p.addr||'-'})`:`CLEARED ${id} ${f.g.name}${f.p.label?' · '+f.p.label:''}`);
   evaluate();
 }
-function outNames(r){const C=cfg();return r.outputs.length?r.outputs.map(k=>C.outputs.find(o=>o.key===k)?.name).filter(Boolean).join(', '):'no outputs'}
+function outNames(r){const C=cfg();return r.outputs.length?r.outputs.map(k=>{const n=C.outputs.find(o=>o.key===k)?.name;const d=+(r.delays||{})[k]||0;return n?(d?`${n} (after ${d} s)`:n):''}).filter(Boolean).join(', '):'no outputs'}
 function evaluate(quiet){
   const c=compute();
   const ids=new Set(c.matched.map(r=>r.id));
@@ -371,8 +405,12 @@ function evaluate(quiet){
     c.matched.forEach(r=>{if(!S.matched.has(r.id))log(r.type==='fire'?'fire':'pre',`${TYPE[r.type].label.toUpperCase()} · ${r.name} · ON: ${outNames(r)}`)});
     cfg().rules.forEach(r=>{if(S.matched.has(r.id)&&!ids.has(r.id))log('ok',`CLEARED · ${r.name}`)});
   }
-  if(!quiet)c.counting.forEach(x=>{if(!S.cd.has(x.r.id))log('pre',`COUNTDOWN · ${x.r.name} · ${x.r.delay} s`)});
-  S.cd=new Set(c.counting.map(x=>x.r.id));
+  const oname=k=>cfg().outputs.find(o=>o.key===k)?.name||k;
+  if(!quiet){
+    c.counting.forEach(x=>{const k=x.r.id+'|'+x.o;if(!S.cd.has(k))log('pre',`COUNTDOWN · ${oname(x.o)} in ${x.d} s (${x.r.name})`)});
+    c.delayed.forEach(x=>{if(!S.dOn.has(x.k))log('fire',`${oname(x.o).toUpperCase()} ON after ${x.d} s (${x.r.name})`)});
+  }
+  S.cd=new Set(c.counting.map(x=>x.r.id+'|'+x.o));S.dOn=new Set(c.delayed.map(x=>x.k));
   S.matched=ids;
   const rank=c.top?TYPE[c.top.type].rank:0;
   if(rank>S.top&&rank>1)S.sil=false;
@@ -397,7 +435,7 @@ function render(c){
     el.classList.toggle('fire',st==='fire');el.classList.toggle('pre',st==='pre');el.classList.toggle('sup',st==='sup');
     el.classList.toggle('sil',!!st&&S.sil);
     let t='Standby';
-    const cdo=!st&&c.counting.find(x=>x.r.outputs.includes(o.key));
+    const cdo=!st&&c.counting.find(x=>x.o===o.key);
     if(cdo){el.classList.add('pre');t=`Countdown · ${cdo.left} s`}
     if(st){
       if(S.sil&&(o.kind==='audible'||o.kind==='voice'))t='Active · silenced';
@@ -419,7 +457,8 @@ function render(c){
   $('#scr-h').textContent=c.top?(c.top.screen||TYPE[c.top.type].label.toUpperCase()):(S.on.size?'ALARM · NO RULE':'SYSTEM NORMAL');
   $('#scr-c').textContent=`Points active: ${c.pts.length} · Rules matched: ${c.matched.length}`;
   const lines=c.pts.map((x,i)=>`<div>${String(i+1).padStart(2,'0')} ${esc(x.p.addr)} ${esc(x.p.id)} ${esc(x.p.label?x.p.label:x.g.name.replace(/ \(.*\)/,''))}</div>`);
-  c.counting.forEach(x=>lines.push(`<div class="w3">${esc((x.r.screen||x.r.name).toUpperCase())} IN ${x.left} s</div>`));
+  c.counting.forEach(x=>lines.push(`<div class="w3">${esc((C.outputs.find(o=>o.key===x.o)?.name||x.o).toUpperCase())} IN ${x.left} s</div>`));
+  c.delayed.forEach(x=>lines.push(`<div class="w2">${esc((C.outputs.find(o=>o.key===x.o)?.name||x.o).toUpperCase())} ACTIVATED</div>`));
   const seen=new Set();
   c.sorted.forEach(r=>(r.lines||'').split('\n').map(s=>s.trim()).filter(Boolean).forEach(l=>{if(!seen.has(l)){seen.add(l);lines.push(`<div class="${r.type==='sup'?'w3':'w2'}">${esc(l)}</div>`)}}));
   $('#scr-list').innerHTML=lines.length?lines.slice(0,7).join('')+(lines.length>7?`<div class="dim">+${lines.length-7} more</div>`:''):'<div class="dim">No active events</div>';
@@ -432,7 +471,7 @@ function render(c){
 }
 function ruleSummary(){
   const C=cfg();const pname=id=>{const f=findPoint(id);return f?`${f.g.name.replace(/ \(.*\)/,'')} ${f.p.label||f.p.id}`:id};const gname=k=>C.inputs.find(g=>g.key===k)?.name.replace(/ \(.*\)/,'')||'?';
-  $('#rule-sum').innerHTML=C.rules.map(r=>`<span><b>${esc(TYPE[r.type].label)}: ${esc(r.name)}</b> — when ${r.when.map(c=>`${c.min||1}+ of ${[...c.groups.map(gname),...(c.points||[]).map(pname)].join(' / ')||'(nothing)'}`).join(' AND ')} → ${r.delay?'after '+r.delay+' s, ':''}${esc(outNames(r))}</span>`).join('');
+  $('#rule-sum').innerHTML=C.rules.map(r=>`<span><b>${esc(TYPE[r.type].label)}: ${esc(r.name)}</b> — when ${r.when.map(c=>`${c.min||1}+ of ${[...c.groups.map(gname),...(c.points||[]).map(pname)].join(' / ')||'(nothing)'}`).join(' AND ')} → ${esc(outNames(r))}</span>`).join('');
 }
 $('#k-reset').addEventListener('click',()=>{if(!S.on.size)return;S.on.clear();S.sil=false;S.ack=false;S.since={};log('ok','PANEL RESET · all devices restored · outputs OFF');evaluate()});
 $('#k-sil').addEventListener('click',()=>{if(S.top<2)return;S.sil=!S.sil;log(S.sil?'pre':'fire',S.sil?'SIGNAL SILENCE · announcement, bell & horn silenced · outputs still active':'SIGNALS RESOUNDED · announcement, bell & horn ON');evaluate(true)});
@@ -476,11 +515,12 @@ function playVoice(id){
 /* ---------- loading & saving ---------- */
 function setInfo(){
   const t={shared:'Shared setup (same for everyone)',local:'Setup saved on this device only',default:'Default setup'}[source];
-  $('#cfg-info').textContent=t+(saved.updated?` · last saved ${saved.updated}`:'');
+  $('#cfg-info').textContent=t+((saved||{}).updated?` · last saved ${saved.updated}`:'');
 }
 function normalise(c){
   const d=clone(DEFAULT_CONFIG);if(!c||!Array.isArray(c.inputs))return d;
-  c.voices=c.voices||d.voices;c.rules=c.rules||[];c.outputs=c.outputs||[];return c;
+  c.voices=c.voices||d.voices;c.rules=c.rules||[];c.outputs=c.outputs||[];
+  c.rules.forEach(r=>{r.delays=r.delays||{};if(r.delay){r.outputs.forEach(o=>r.delays[o]=+r.delay);delete r.delay}r.when.forEach(w=>{w.groups=w.groups||[];w.points=w.points||[]})});return c;
 }
 async function load(){
   try{
@@ -518,7 +558,7 @@ async function save(){
 /* ---------- editor ---------- */
 let tab='inputs',dirty=false,buildT=null;
 function msg(cls,t){const m=$('#ed-msg');if(!t){m.hidden=true;return}m.hidden=false;m.className='ed-msg '+cls;m.textContent=t}
-function openEditor(){draft=clone(saved);pending={};dirty=false;$('#ed').hidden=false;$('#k-edit').hidden=true;$('#ed-save').disabled=false;msg('ok','Changes show in the diagram straight away. Press “Save for everyone” to keep them.');renderEditor();$('#ed').scrollIntoView({behavior:'smooth',block:'start'})}
+function openEditor(){draft=clone(cfg());pending={};dirty=false;$('#ed').hidden=false;$('#k-edit').hidden=true;$('#ed-save').disabled=false;msg('ok','Changes show in the diagram straight away. Press “Save for everyone” to keep them.');renderEditor();$('#ed').scrollIntoView({behavior:'smooth',block:'start'})}
 function closeEditor(){$('#ed').hidden=true;$('#k-edit').hidden=false;dirty=false;msg()}
 function changed(rebuildEditor){dirty=true;clearTimeout(buildT);buildT=setTimeout(build,150);if(rebuildEditor)renderEditor()}
 $('#k-edit').addEventListener('click',openEditor);
@@ -527,7 +567,7 @@ $('#ed-save').addEventListener('click',save);
 let defArm=false;
 $('#ed-default').addEventListener('click',()=>{
   if(!defArm){defArm=true;$('#ed-default').textContent='Press again to confirm';setTimeout(()=>{defArm=false;$('#ed-default').textContent='Restore default setup'},4000);return}
-  defArm=false;$('#ed-default').textContent='Restore default setup';draft=clone(DEFAULT_CONFIG);changed(true);msg('warn','Default setup loaded. Press “Save for everyone” to apply it for all users.');
+  defArm=false;$('#ed-default').textContent='Restore default setup';draft=normalise(clone(DEFAULT_CONFIG));changed(true);msg('warn','Default setup loaded. Press “Save for everyone” to apply it for all users.');
 });
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));renderEditor()}));
@@ -559,22 +599,7 @@ function renderEditor(){
       ${tools('outputs',i,C.outputs.length)}</div></div>`).join('')+
     `<div><button class="btn pri" data-act="add" data-kind="outputs">+ Add output device</button></div>`;
   }else if(tab==='rules'){
-    b.innerHTML=`<p class="hint">A rule is ON when <b>all</b> of its conditions are true. If several rules are ON, every output they list turns on; the screen and voice follow the strongest rule (Fire &gt; Pre-alarm &gt; Supervisory, then the order below).</p>`+
-    C.rules.map((r,i)=>`<div class="item rule-item type-${r.type}"><div class="fields">
-      <div class="row2"><label class="f">Rule name<input type="text" data-k="rules.${i}.name" value="${esc(r.name)}"></label>
-      <label class="f">Type<select data-k="rules.${i}.type">${Object.entries(TYPE).map(([k,v])=>`<option value="${k}" ${r.type===k?'selected':''}>${v.label}</option>`).join('')}</select></label></div>
-      <div class="f" style="font-size:12.5px;font-weight:600;color:var(--muted)">IF (all conditions true)</div>
-      ${r.when.map((c,j)=>`<div class="cond"><div class="cond-top">At least <input type="number" min="1" max="20" data-k="rules.${i}.when.${j}.min" value="${c.min||1}" aria-label="Minimum count"> active point(s) from:<span class="sp" style="flex:1"></span><button class="btn sm dan" data-act="delcond" data-i="${i}" data-j="${j}">Remove condition</button></div>
-        <div class="checks">${C.inputs.map(g=>`<label class="chk"><input type="checkbox" data-act="cg" data-i="${i}" data-j="${j}" data-g="${g.key}" ${c.groups.includes(g.key)?'checked':''}>${esc(g.name)}${g.points.length>1?' (any)':''}</label>`+(g.points.length>1?g.points.map(p=>`<label class="chk sub"><input type="checkbox" data-act="cp" data-i="${i}" data-j="${j}" data-p="${esc(p.id)}" ${(c.points||[]).includes(p.id)?'checked':''}>${esc(g.name.replace(/ \(.*\)/,''))}: ${esc(p.label||p.id)}</label>`).join(''):'')).join('')}</div></div>`).join('')}
-      <div><button class="btn sm" data-act="addcond" data-i="${i}">+ Add condition (AND)</button></div>
-      <div class="f" style="font-size:12.5px;font-weight:600;color:var(--muted)">THEN turn on <button class="btn sm" data-act="allout" data-i="${i}">All</button> <button class="btn sm" data-act="noout" data-i="${i}">None</button></div>
-      <div class="checks">${C.outputs.map(o=>`<label class="chk"><input type="checkbox" data-act="ro" data-i="${i}" data-o="${o.key}" ${r.outputs.includes(o.key)?'checked':''}>${esc(o.name)}</label>`).join('')}</div>
-      <div class="row2"><label class="f">Screen heading<input type="text" data-k="rules.${i}.screen" value="${esc(r.screen)}" placeholder="e.g. FIRE ALARM"></label>
-      <label class="f">Delay before ON (seconds, 0 = at once)<input type="number" min="0" max="600" data-k="rules.${i}.delay" value="${r.delay||0}"></label>
-      <label class="f">Voice message<select data-k="rules.${i}.voice"><option value="">None</option>${C.voices.map(v=>`<option value="${v.id}" ${r.voice===v.id?'selected':''}>${esc(v.name)}</option>`).join('')}</select></label></div>
-      <label class="f">Extra screen lines (one per line)<textarea data-k="rules.${i}.lines">${esc(r.lines)}</textarea></label>
-      ${tools('rules',i,C.rules.length)}</div></div>`).join('')+
-    `<div><button class="btn pri" data-act="add" data-kind="rules">+ Add rule</button></div>`;
+    b.innerHTML=logicView==='matrix'?matrixHTML(C):sentenceHTML(C);
   }else{
     b.innerHTML=`<p class="hint">Upload short MP3 or WAV files (under 1 MB). Pick which message each rule plays in the Cause &amp; effect tab.</p><div class="voices">`+
     C.voices.map((v,i)=>`<div class="vrow"><input type="text" data-k="voices.${i}.name" value="${esc(v.name)}" aria-label="Message name">
@@ -584,10 +609,80 @@ function renderEditor(){
     `</div><div><button class="btn pri" data-act="add" data-kind="voices">+ Add voice message</button></div>`;
   }
 }
-function setPath(o,path,v){const k=path.split('.');let x=o;for(let i=0;i<k.length-1;i++)x=x[k[i]];x[k[k.length-1]]=v}
+let logicView='matrix';
+const LET=i=>String.fromCharCode(65+i);
+function viewSwitch(){return `<div class="vsw" role="group" aria-label="Logic view"><button class="btn ${logicView==='matrix'?'pri':''}" data-act="view" data-v="matrix">C&amp;E matrix (table)</button><button class="btn ${logicView==='sent'?'pri':''}" data-act="view" data-v="sent">Sentences (When… Then…)</button><span class="hint">Both views edit the same rules — change one and the other follows.</span></div>`}
+function typeSel(r,i){return `<select class="tsel t-${r.type}" data-k="rules.${i}.type" aria-label="Rule type">${Object.entries(TYPE).map(([k,v])=>`<option value="${k}" ${r.type===k?'selected':''}>${v.label}</option>`).join('')}</select>`}
+function matrixHTML(C){
+  const pts=C.inputs.flatMap(g=>g.points.map(p=>({g,p})));
+  let h=viewSwitch()+`<p class="hint"><b>Input cells:</b> tap to cycle <span class="mk">A</span> → <span class="mk">B</span> → … → blank. Inputs with the same letter form one group; the rule is ON when <b>every</b> letter reaches its count in <b>Need</b>. <b>Output cells:</b> tap to cycle <span class="mk on">●</span> on at once → <span class="mk dl">⏱</span> on after a delay (type the seconds) → blank (tap the ⏱ to clear).</p>
+  <div class="mx-wrap"><table class="mx"><thead><tr><th rowspan="2" class="stk">Rule (cause)</th><th rowspan="2">Type</th>`;
+  C.inputs.forEach(g=>h+=`<th colspan="${g.points.length}" class="gh in">${esc(g.name.replace(/ \(.*\)/,''))}</th>`);
+  h+=`<th rowspan="2" class="need">Need</th><th colspan="${C.outputs.length}" class="gh out">Outputs (effect)</th><th rowspan="2">Test</th></tr><tr>`;
+  pts.forEach(x=>h+=`<th class="vt in"><span>${esc(x.p.label||x.p.id)}</span></th>`);
+  C.outputs.forEach(o=>h+=`<th class="vt out"><span>${esc(o.name)}</span></th>`);
+  h+=`</tr></thead><tbody>`;
+  C.rules.forEach((r,i)=>{
+    const sets=r.when.map(cset);
+    h+=`<tr class="r-${r.type}"><td class="stk"><div class="rn"><input type="text" data-k="rules.${i}.name" value="${esc(r.name)}" aria-label="Rule name"><button class="x" data-act="del" data-kind="rules" data-i="${i}" title="Delete rule" aria-label="Delete rule">×</button></div></td><td>${typeSel(r,i)}</td>`;
+    pts.forEach(x=>{const L=sets.map((s,j)=>s.has(x.p.id)?LET(j):'').filter(Boolean).join(',');
+      h+=`<td class="c in${L?' set':''}" data-act="mx-in" data-i="${i}" data-p="${esc(x.p.id)}" title="${esc(x.g.name+' · '+(x.p.label||x.p.id))}">${L?`<span class="mk">${L}</span>`:''}</td>`});
+    h+=`<td class="need">${r.when.map((c,j)=>`<label><span class="mk">${LET(j)}</span>≥<input type="number" min="1" max="20" data-k="rules.${i}.when.${j}.min" value="${c.min||1}" aria-label="Need for ${LET(j)}"></label>`).join('')||'<span class="hint">tap inputs</span>'}</td>`;
+    C.outputs.forEach(o=>{const on=r.outputs.includes(o.key),d=+(r.delays||{})[o.key]||0;
+      h+=`<td class="c out${on?' set':''}" data-act="mx-out" data-i="${i}" data-o="${o.key}" title="${esc(o.name)}">${on?(d?`<span class="mk dl"><b title="Tap to turn off">⏱</b><input type="number" min="1" max="600" data-k="rules.${i}.delays.${o.key}" value="${d}" aria-label="Delay seconds">s</span>`:'<span class="mk on">●</span>'):''}</td>`});
+    h+=`<td><button class="btn sm" data-act="test" data-i="${i}" aria-label="Test ${esc(r.name)}">▶</button></td></tr>`;
+  });
+  h+=`</tbody></table></div><div class="item-tools"><button class="btn pri" data-act="add" data-kind="rules">+ Add rule</button><span class="hint">Screen text, voice message and rule order are set in the Sentences view.</span></div>`;
+  return h;
+}
+function sentenceHTML(C){
+  return viewSwitch()+`<p class="hint">A rule is ON when <b>all</b> its WHEN lines are true. If several rules are ON, every output they list turns on; the screen and voice follow the strongest rule (Fire &gt; Pre-alarm &gt; Supervisory, then the order below).</p>`+
+  C.rules.map((r,i)=>`<div class="item rule-item type-${r.type}"><div class="fields">
+    <div class="rhead"><input type="text" class="rname" data-k="rules.${i}.name" value="${esc(r.name)}" aria-label="Rule name">${typeSel(r,i)}<button class="btn sm" data-act="test" data-i="${i}">▶ Test</button></div>
+    ${r.when.map((c,j)=>`<div class="sent"><span class="kw">${j?'AND':'WHEN'}</span> at least <input type="number" min="1" max="20" data-k="rules.${i}.when.${j}.min" value="${c.min||1}" aria-label="Minimum count"> of these are active:
+      <button class="btn sm dan" data-act="delcond" data-i="${i}" data-j="${j}">Remove</button>
+      <div class="checks">${C.inputs.map(g=>`<label class="chk"><input type="checkbox" data-act="cg" data-i="${i}" data-j="${j}" data-g="${g.key}" ${c.groups.includes(g.key)?'checked':''}>${esc(g.name.replace(/ \(.*\)/,''))}${g.points.length>1?' (any)':''}</label>`+(g.points.length>1?g.points.map(p=>`<label class="chk sub"><input type="checkbox" data-act="cp" data-i="${i}" data-j="${j}" data-p="${esc(p.id)}" ${(c.points||[]).includes(p.id)?'checked':''}>${esc(p.label||p.id)}</label>`).join(''):'')).join('')}</div></div>`).join('')}
+    <div><button class="btn sm" data-act="addcond" data-i="${i}">+ AND another condition</button></div>
+    <div class="sent"><span class="kw then">THEN</span> turn on: <button class="btn sm" data-act="allout" data-i="${i}">All</button> <button class="btn sm" data-act="noout" data-i="${i}">None</button>
+      <div class="checks">${C.outputs.map(o=>{const on=r.outputs.includes(o.key),d=+(r.delays||{})[o.key]||0;return `<label class="chk"><input type="checkbox" data-act="ro" data-i="${i}" data-o="${o.key}" ${on?'checked':''}>${esc(o.name)}${on?`<span class="dly">after <input type="number" min="0" max="600" data-k="rules.${i}.delays.${o.key}" value="${d}" aria-label="Delay seconds"> s</span>`:''}</label>`}).join('')}</div></div>
+    <div class="row2"><label class="f">Screen heading<input type="text" data-k="rules.${i}.screen" value="${esc(r.screen)}" placeholder="e.g. FIRE ALARM"></label>
+    <label class="f">Voice message<select data-k="rules.${i}.voice"><option value="">None</option>${C.voices.map(v=>`<option value="${v.id}" ${r.voice===v.id?'selected':''}>${esc(v.name)}</option>`).join('')}</select></label></div>
+    <label class="f">Extra screen lines (one per line)<textarea data-k="rules.${i}.lines">${esc(r.lines)}</textarea></label>
+    ${tools('rules',i,C.rules.length)}</div></div>`).join('')+
+  `<div><button class="btn pri" data-act="add" data-kind="rules">+ Add rule</button></div>`;
+}
+function setCond(c,ids){
+  const set=new Set(ids),C=draft;c.groups=[];
+  C.inputs.forEach(g=>{if(g.points.length>1&&g.points.every(p=>set.has(p.id))){c.groups.push(g.key);g.points.forEach(p=>set.delete(p.id))}});
+  c.points=[...set];
+}
+function mxIn(r,pid){
+  const sets=r.when.map(cset);const cur=sets.findIndex(s=>s.has(pid));
+  const target=cur===-1?0:cur+1;
+  let tgtObj=r.when[target]||null;
+  if(!tgtObj&&cur===-1){tgtObj={groups:[],points:[],min:1};r.when.push(tgtObj)}
+  else if(!tgtObj&&cur!==-1&&sets[cur].size>1){tgtObj={groups:[],points:[],min:1};r.when.push(tgtObj)}
+  r.when.forEach(c=>{const s=cset(c);if(s.has(pid)){s.delete(pid);setCond(c,[...s])}});
+  if(tgtObj){const s=cset(tgtObj);s.add(pid);setCond(tgtObj,[...s])}
+  r.when=r.when.filter(c=>cset(c).size);
+  r.when.forEach(c=>{c.min=Math.min(Math.max(1,+c.min||1),cset(c).size)});
+}
+function mxOut(r,o){
+  r.delays=r.delays||{};
+  if(!r.outputs.includes(o)){r.outputs.push(o);delete r.delays[o]}
+  else if(!(+r.delays[o]))r.delays[o]=30;
+  else{r.outputs=r.outputs.filter(x=>x!==o);delete r.delays[o]}
+}
+function testRule(r){
+  const pick=new Set();
+  r.when.forEach(c=>{const s=[...cset(c)];let n=[...s].filter(id=>pick.has(id)).length;for(const id of s){if(n>=(+c.min||1))break;if(!pick.has(id)){pick.add(id);n++}}});
+  S.on=pick;S.sil=false;S.ack=false;S.since={};S.matched=new Set();log('ok',`TEST · ${r.name} · triggered ${[...pick].join(', ')||'nothing'}`);evaluate();
+  $('#cv').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function setPath(o,path,v){const k=path.split('.');let x=o;for(let i=0;i<k.length-1;i++){if(x[k[i]]==null)x[k[i]]={};x=x[k[i]]}x[k[k.length-1]]=v}
 $('#ed-body').addEventListener('input',e=>{
   const k=e.target.dataset.k;if(!k)return;
-  let v=e.target.value;if(e.target.type==='number')v=/\.delay$/.test(k)?Math.max(0,parseInt(v)||0):Math.max(1,parseInt(v)||1);
+  let v=e.target.value;if(e.target.type==='number')v=/\.delays\./.test(k)?Math.max(0,parseInt(v)||0):Math.max(1,parseInt(v)||1);
   const pm=k.match(/^inputs\.(\d+)\.points\.(\d+)\.id$/);
   if(pm){const old=draft.inputs[+pm[1]].points[+pm[2]].id;draft.rules.forEach(r=>r.when.forEach(c=>{if(c.points)c.points=c.points.map(p=>p===old?v:p)}))}
   setPath(draft,k,v);changed(/\.(type)$/.test(k));
@@ -596,25 +691,30 @@ $('#ed-body').addEventListener('change',e=>{
   const t=e.target,a=t.dataset.act;if(!a)return;const r=draft.rules[+t.dataset.i];
   if(a==='cp'){const c=r.when[+t.dataset.j];const P=c.points||[];c.points=t.checked?[...new Set([...P,t.dataset.p])]:P.filter(x=>x!==t.dataset.p);changed()}
   if(a==='cg'){const c=r.when[+t.dataset.j];c.groups=t.checked?[...new Set([...c.groups,t.dataset.g])]:c.groups.filter(x=>x!==t.dataset.g);changed()}
-  if(a==='ro'){r.outputs=t.checked?[...new Set([...r.outputs,t.dataset.o])]:r.outputs.filter(x=>x!==t.dataset.o);changed()}
+  if(a==='ro'){r.outputs=t.checked?[...new Set([...r.outputs,t.dataset.o])]:r.outputs.filter(x=>x!==t.dataset.o);if(!t.checked&&r.delays)delete r.delays[t.dataset.o];changed(true)}
 });
 let fileTarget=null;
 $('#ed-body').addEventListener('click',e=>{
-  const b=e.target.closest('button[data-act]');if(!b)return;
+  if(e.target.matches('input,select,textarea'))return;
+  const b=e.target.closest('button[data-act],td[data-act]');if(!b)return;
   const a=b.dataset.act,kind=b.dataset.kind,i=+b.dataset.i,j=+b.dataset.j,L=draft[kind];
+  if(a==='view'){logicView=b.dataset.v;renderEditor();return}
+  if(a==='mx-in'){mxIn(draft.rules[i],b.dataset.p);changed(true);return}
+  if(a==='mx-out'){mxOut(draft.rules[i],b.dataset.o);changed(true);return}
+  if(a==='test'){testRule(draft.rules[i]);return}
   if(a==='up'&&i>0){[L[i-1],L[i]]=[L[i],L[i-1]];changed(true)}
   if(a==='down'&&i<L.length-1){[L[i+1],L[i]]=[L[i],L[i+1]];changed(true)}
   if(a==='del'){
     const item=L[i];L.splice(i,1);
     if(kind==='inputs'){const ids=item.points.map(p=>p.id);draft.rules.forEach(r=>r.when.forEach(c=>{c.groups=c.groups.filter(g=>g!==item.key);c.points=(c.points||[]).filter(p=>!ids.includes(p))}))}
-    if(kind==='outputs')draft.rules.forEach(r=>r.outputs=r.outputs.filter(o=>o!==item.key));
+    if(kind==='outputs')draft.rules.forEach(r=>{r.outputs=r.outputs.filter(o=>o!==item.key);if(r.delays)delete r.delays[item.key]});
     if(kind==='voices')draft.rules.forEach(r=>{if(r.voice===item.id)r.voice=''});
     changed(true);
   }
   if(a==='add'){
     if(kind==='inputs'){L.push({key:uid('g'),name:'New input device',sub:'(Addressable)',img:'',points:[{id:'NEW-'+(L.length+1),addr:''}]});msg('ok','Input added. Open the “Logic (cause & effect)” tab to choose what it turns on.')}
     if(kind==='outputs'){L.push({key:uid('o'),name:'New output device',sub:'',img:'',onText:'Active',kind:'control'});msg('ok','Output added. Open the “Logic (cause & effect)” tab and tick it in the rules that should turn it on.')}
-    if(kind==='rules')L.push({id:uid('r'),name:'New rule',type:'fire',when:[{groups:[],points:[],min:1}],outputs:[],screen:'',lines:'',voice:''});
+    if(kind==='rules')L.push({id:uid('r'),name:'New rule',type:'fire',when:[{groups:[],points:[],min:1}],outputs:[],delays:{},screen:'',lines:'',voice:''});
     if(kind==='voices')L.push({id:uid('v'),name:'New message',asset:''});
     changed(true);
   }
@@ -623,7 +723,7 @@ $('#ed-body').addEventListener('click',e=>{
   if(a==='addcond'){draft.rules[i].when.push({groups:[],points:[],min:1});changed(true)}
   if(a==='delcond'){draft.rules[i].when.splice(j,1);changed(true)}
   if(a==='allout'){draft.rules[i].outputs=draft.outputs.map(o=>o.key);changed(true)}
-  if(a==='noout'){draft.rules[i].outputs=[];changed(true)}
+  if(a==='noout'){draft.rules[i].outputs=[];draft.rules[i].delays={};changed(true)}
   if(a==='photo'){fileTarget={kind,i};$('#file-img').value='';$('#file-img').click()}
   if(a==='nophoto'){draft[kind][i].img='';changed(true)}
   if(a==='audio'){fileTarget={kind:'voices',i};$('#file-aud').value='';$('#file-aud').click()}
