@@ -162,6 +162,28 @@ label.f{display:flex;flex-direction:column;gap:3px;font-size:12.5px;font-weight:
 .type-fire{border-left:5px solid var(--fire)} .type-pre{border-left:5px solid var(--warn)} .type-sup{border-left:5px solid #c9a227}
 .hint{font-size:13px;color:var(--muted);margin:0}
 .rule-item{grid-template-columns:1fr}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:13px}
+.mk.sg{background:#3b4048} .mkb{border:0;border-radius:4px;color:#fff;font:700 12px var(--f-mono);padding:1px 6px;margin-left:4px;cursor:pointer} .mkb.on{background:var(--ok)} .mkb.sg{background:#3b4048}
+.mx th.diag{position:sticky;left:0;z-index:4;min-width:340px;height:190px;background:linear-gradient(to top right,var(--surface-2) calc(50% - 1px),var(--fire) 50%,var(--surface-2) calc(50% + 1px))}
+.mx th.diag .so{position:absolute;right:14px;top:30px} .mx th.diag .si{position:absolute;left:14px;bottom:30px}
+.mx tr.zr td{background:var(--surface-2);height:30px}
+.mx td.zt{font-weight:700;text-decoration:underline;text-align:left}
+.mx td.cause{cursor:pointer;text-align:left;max-width:380px}
+.mx td.cause .ct{display:block;font-size:13px;line-height:1.3}
+.mx td.cause .rnm{display:block;font-size:11.5px;color:var(--muted)}
+.mx td.cause:hover .ct{text-decoration:underline}
+.mx tr.ced td{background:var(--surface-2);text-align:left}
+.ced-in{display:flex;flex-direction:column;gap:8px;max-width:1000px;position:sticky;left:0}
+.ctline{font-weight:600;font-size:14px;padding:6px 10px;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+.hold{display:inline-flex;gap:4px;align-items:center;font-size:13px;color:var(--muted)} .hold input{width:64px!important}
+.sgs{z-index:2;background:#f1f3f6;border:calc(1.5*var(--u)) solid #c9d0d8;border-radius:calc(10*var(--u));padding:calc(8*var(--u)) calc(10*var(--u));display:flex;flex-direction:column;gap:calc(6*var(--u))}
+.sgs-h{font:700 calc(15*var(--u)) var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:#3b4048;display:flex;align-items:center;gap:calc(6*var(--u))}
+.sgs-l{display:grid;grid-template-columns:1fr;gap:calc(6*var(--u))}
+.sg{display:flex;align-items:center;gap:calc(6*var(--u));background:#fff;border:calc(1.5*var(--u)) solid #d3d9e0;border-radius:calc(6*var(--u));padding:calc(5*var(--u)) calc(7*var(--u));min-width:0}
+.sgn{flex:1;min-width:0;font-size:calc(14*var(--u));font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#222}
+.sgs-st{font:700 calc(12*var(--u)) var(--f-mono);color:#7a8590;white-space:nowrap}
+.wedge{flex:none;width:calc(18*var(--u));height:calc(9*var(--u));background:#3b4048;clip-path:polygon(0 100%,100% 0,100% 100%)}
+.sg.on{animation:cAmb 1.2s steps(1) infinite} .sg.on.fire{animation:cFire .8s steps(1) infinite} .sg.on .sgs-st{color:#9a2a1a}
 .vsw{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .mk{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 4px;border-radius:5px;font:700 12.5px var(--f-mono);background:var(--accent);color:#fff}
 .mk.on{background:var(--ok)} .mk.dl{background:var(--warn);gap:2px;display:inline-flex;align-items:center}
@@ -264,6 +286,8 @@ const DEFAULT_CONFIG={
     {key:'flow',name:'Sprinkler Flow Switch',sub:'(Monitored via I/O Module)',img:'def:flow',points:[{id:'FS-01',addr:'L1M301'}]}
   ],
   outputs:[
+    {key:'cal',name:'Common Alarm Signal (LED & Buzzer)',sub:'Main fire alarm panel',img:'',onText:'Active',kind:'signal',group:'Control Unit Annunciation'},
+    {key:'csi',name:'Common Supervisory Signal (LED & Buzzer)',sub:'Main fire alarm panel',img:'',onText:'Active',kind:'signal',group:'Control Unit Annunciation'},
     {key:'bell',name:'Alarm Bell',sub:'(Audible Alarm)',img:'def:bell',onText:'Ringing',kind:'audible'},
     {key:'speaker',name:'Speaker Announcement',sub:'(Voice Evacuation / PA)',img:'def:speaker',onText:'Announcing',kind:'voice'},
     {key:'strobe',name:'Strobe & Horn',sub:'(Audio-Visual Alarm)',img:'def:strobe',onText:'Flashing',kind:'av'},
@@ -271,23 +295,26 @@ const DEFAULT_CONFIG={
     {key:'lift',name:'Lift Homing',sub:'(Recall to Ground Floor via Fireman’s Lift Interface)',img:'def:lift',onText:'Homed to G',kind:'control'},
     {key:'door',name:'Release Emergency Door',sub:'(Fail-Safe Unlock via Access Control)',img:'def:door',onText:'Unlocked',kind:'control'},
     {key:'release',name:'FM200 Gas Release',sub:'(Release Solenoid on Agent Cylinder)',img:'def:release',onText:'Gas released',kind:'control'},
-    {key:'lamp',name:'Gas Discharged Lamp',sub:'(Outside FM200 Room · Do Not Enter)',img:'def:lamp',onText:'Lit',kind:'visual'}
+    {key:'lamp',name:'Gas Discharged Lamp',sub:'(Outside FM200 Room · Do Not Enter)',img:'def:lamp',onText:'Lit',kind:'visual'},
+    {key:'iboss',name:'iBOSS (BOMBA Monitoring)',sub:'Sistem Pengawasan Kebakaran Automatik',img:'',onText:'Signal sent',kind:'signal',group:'Supplementary'},
+    {key:'bms',name:'BMS',sub:'Building management system',img:'',onText:'Signal sent',kind:'signal',group:'Supplementary'}
   ],
   voices:[{id:'stay',name:'Stay calm, alarm activated',asset:'def:stay'},{id:'evac',name:'Attention please, evacuate',asset:'def:evac'}],
   rules:[
-    {id:'r1',name:'Pre-action release (sprinkler burst + detector)',type:'fire',when:[{groups:['pa'],min:1},{groups:['smoke','heat'],min:1}],outputs:['bell','speaker','strobe','shutter','lift','door'],screen:'2ND ALARM',lines:'PRE-ACTION VALVE OPEN\nWATER PRESSURE SW ACTIVE\nWATER DISCHARGING AT BURST HEAD',voice:'evac'},
-    {id:'r2',name:'Double knock (2 detectors / call points)',type:'fire',when:[{groups:['smoke','heat','mcp'],min:2}],outputs:['bell','speaker','strobe','shutter','lift','door'],screen:'2ND ALARM',lines:'',voice:'evac'},
-    {id:'f1',name:'FM200 gas discharged (discharge signal)',type:'fire',when:[{groups:[],points:['DS-01'],min:1}],outputs:['bell','speaker','strobe','shutter','lift','door','lamp'],screen:'GAS DISCHARGED',lines:'FM200 GAS DISCHARGED · DO NOT ENTER',voice:'evac'},
-    {id:'f4',name:'FM200 cross-zone fire (smoke + heat)',type:'fire',when:[{groups:[],points:['FSD-01','FHD-01'],min:2}],outputs:['bell','speaker','strobe','shutter','lift','door','release'],delays:{release:30},screen:'2ND ALARM',lines:'FM200 CROSS-ZONE CONFIRMED',voice:'evac'},
-    {id:'f5',name:'FM200 discharge button',type:'fire',when:[{groups:[],points:['MDB-01'],min:1}],outputs:['bell','speaker','strobe','shutter','lift','door','release'],delays:{release:30},screen:'2ND ALARM',lines:'FM200 MANUAL DISCHARGE ACTIVATED',voice:'evac'},
-    {id:'r4',name:'Sprinkler water flow',type:'fire',when:[{groups:['flow'],min:1}],outputs:['bell','speaker','strobe','shutter','lift','door'],screen:'2ND ALARM',lines:'SPRINKLER WATER FLOW',voice:'evac'},
-    {id:'r5',name:'Single knock (1 detector / call point)',type:'pre',when:[{groups:['smoke','heat','mcp'],min:1}],outputs:['speaker'],screen:'1ST ALARM',lines:'',voice:'stay'},
-    {id:'f6',name:'FM200 1st alarm (1 FM200 detector)',type:'pre',when:[{groups:[],points:['FSD-01','FHD-01'],min:1}],outputs:['bell','speaker'],screen:'FM200 1ST ALARM',lines:'',voice:'stay'},
-    {id:'r6',name:'Pre-action low pressure (sprinkler burst only)',type:'sup',when:[{groups:['pa'],min:1}],outputs:[],screen:'LOW PRESSURE',lines:'LOW AIR PRESSURE · PRE-ACTION',voice:''}
+    {id:'r1',name:'Pre-action release (sprinkler burst + detector)',type:'fire',when:[{groups:['pa'],min:1},{groups:['smoke','heat'],min:1}],zone:'Pre-Action Sprinkler Zone',marks:{cal:'sup',iboss:'sup',bms:'sup'},outputs:['bell','speaker','strobe','shutter','lift','door','cal','iboss','bms'],screen:'2ND ALARM',lines:'PRE-ACTION VALVE OPEN\nWATER PRESSURE SW ACTIVE\nWATER DISCHARGING AT BURST HEAD',voice:'evac'},
+    {id:'r2',name:'Double knock (2 detectors / call points)',type:'fire',when:[{groups:['smoke','heat','mcp'],min:2}],zone:'Building – Main FACP',marks:{cal:'sup',iboss:'sup',bms:'sup'},outputs:['bell','speaker','strobe','shutter','lift','door','cal','iboss','bms'],screen:'2ND ALARM',lines:'',voice:'evac'},
+    {id:'f1',name:'FM200 gas discharged (discharge signal)',type:'fire',when:[{groups:[],points:['DS-01'],min:1}],zone:'FM 200 Room',marks:{cal:'sup',iboss:'sup',bms:'sup'},outputs:['bell','speaker','strobe','shutter','lift','door','lamp','cal','iboss','bms'],screen:'GAS DISCHARGED',lines:'FM200 GAS DISCHARGED · DO NOT ENTER',voice:'evac'},
+    {id:'f4',name:'FM200 cross-zone fire (smoke + heat)',type:'fire',when:[{groups:[],points:['FSD-01','FHD-01'],min:2}],zone:'FM 200 Room',marks:{cal:'sup',iboss:'sup',bms:'sup'},outputs:['bell','speaker','strobe','shutter','lift','door','release','cal','iboss','bms'],delays:{release:30},screen:'2ND ALARM',lines:'FM200 CROSS-ZONE CONFIRMED',voice:'evac'},
+    {id:'f5',name:'FM200 discharge button',type:'fire',when:[{groups:[],points:['MDB-01'],min:1}],zone:'FM 200 Room',marks:{cal:'sup',iboss:'sup',bms:'sup'},outputs:['bell','speaker','strobe','shutter','lift','door','release','cal','iboss','bms'],delays:{release:30},screen:'2ND ALARM',lines:'FM200 MANUAL DISCHARGE ACTIVATED',voice:'evac'},
+    {id:'r4',name:'Sprinkler water flow',type:'fire',when:[{groups:['flow'],min:1}],zone:'Building – Main FACP',marks:{cal:'sup',iboss:'sup',bms:'sup'},outputs:['bell','speaker','strobe','shutter','lift','door','cal','iboss','bms'],screen:'2ND ALARM',lines:'SPRINKLER WATER FLOW',voice:'evac'},
+    {id:'r7',name:'Detector Or Breakglass left on 10 min',type:'fire',zone:'Building – Main FACP',marks:{cal:'sup',iboss:'sup',bms:'sup'},when:[{groups:['smoke','heat','mcp'],min:1,hold:10}],outputs:['bell','speaker','strobe','shutter','lift','door','cal','iboss','bms'],screen:'2ND ALARM',lines:'1ST ALARM NOT RESET FOR 10 MIN',voice:'evac'},
+    {id:'r5',name:'Single knock (1 detector / call point)',type:'pre',when:[{groups:['smoke','heat','mcp'],min:1}],zone:'Building – Main FACP',marks:{cal:'sup',bms:'sup'},outputs:['speaker','cal','bms'],screen:'1ST ALARM',lines:'',voice:'stay'},
+    {id:'f6',name:'FM200 1st alarm (1 FM200 detector)',type:'pre',when:[{groups:[],points:['FSD-01','FHD-01'],min:1}],zone:'FM 200 Room',marks:{cal:'sup',bms:'sup'},outputs:['bell','speaker','cal','bms'],screen:'FM200 1ST ALARM',lines:'',voice:'stay'},
+    {id:'r6',name:'Pre-action low pressure (sprinkler burst only)',type:'sup',when:[{groups:['pa'],min:1}],zone:'Pre-Action Sprinkler Zone',marks:{csi:'sup',bms:'sup'},outputs:['csi','bms'],screen:'LOW PRESSURE',lines:'LOW AIR PRESSURE · PRE-ACTION',voice:''}
   ]
 };
 const TYPE={fire:{rank:3,label:'2nd Alarm',pill:'2nd alarm'},pre:{rank:2,label:'1st Alarm',pill:'1st alarm'},sup:{rank:1,label:'Supervisory',pill:'Supervisory'}};
-const KIND={audible:'Audible (bell / sounder)',voice:'Voice announcement (speaker)',av:'Audio-visual (strobe + horn)',visual:'Visual only',control:'Control / interface'};
+const KIND={signal:'Signal to panel / monitoring (no photo card)',audible:'Audible (bell / sounder)',voice:'Voice announcement (speaker)',av:'Audio-visual (strobe + horn)',visual:'Visual only',control:'Control / interface'};
 
 const clone=o=>JSON.parse(JSON.stringify(o));
 const uid=p=>p+Math.random().toString(36).slice(2,8);
@@ -296,7 +323,7 @@ const $=s=>document.querySelector(s);
 let saved=null, draft=null, rev=0, ASSETS={...DEF_ASSETS}, pending={}, source='default';
 const cfg=()=>draft||(saved||(saved=normalise(clone(DEFAULT_CONFIG))));
 const asset=id=>pending[id]||ASSETS[id]||'';
-const S={on:new Set(),sil:false,ack:false,matched:new Set(),top:0,log:[],since:{},cd:new Set(),dOn:new Set()};
+const S={on:new Set(),sil:false,ack:false,matched:new Set(),top:0,log:[],since:{},cd:new Set(),dOn:new Set(),hold:{}};
 
 /* ---------- diagram ---------- */
 const NS='http://www.w3.org/2000/svg';
@@ -305,28 +332,31 @@ function build(){
   const C=cfg();
   const ids=new Set(C.inputs.flatMap(g=>g.points.map(p=>p.id)));
   [...S.on].forEach(id=>{if(!ids.has(id))S.on.delete(id)});
+  const CO=C.outputs.filter(o=>o.kind!=='signal'), SG=C.outputs.filter(o=>o.kind==='signal');
   const RY=i=>95+i*97, RH=88;
   const IH=C.inputs.map(g=>{let rows=1,w=0;g.points.forEach(p=>{const bw=String(p.label||p.id).length*8.3+34;if(w&&w+6+bw>272){rows++;w=bw}else w+=(w?6:0)+bw});return Math.max(RH,58+rows*28)});
   const IY=[];C.inputs.forEach((g,i)=>IY.push(i?IY[i-1]+IH[i-1]+9:95));
-  const inEnd=C.inputs.length?IY[IY.length-1]+IH[IH.length-1]:95, outEnd=C.outputs.length?RY(C.outputs.length-1)+RH:95;
+  const inEnd=C.inputs.length?IY[IY.length-1]+IH[IH.length-1]:95, outEnd=CO.length?RY(CO.length-1)+RH:95;
   const last=Math.max(RY(5)+RH,inEnd,outEnd), H=last+18, mid=(95+last)/2;
   const IC=i=>IY[i]+IH[i]/2;
-  const scrY=Math.max(190,mid-200);
+  let scrY=Math.max(190,mid-200);
+  const sgH=SG.length?44+SG.length*34:0;
+  const need=scrY+492+sgH+20;let H2=H;if(need>H){H2=need}
   GEO={RY,RH,mid};
-  const cv=$('#cv');cv.style.aspectRatio=`1752/${H}`;
-  let html=`<svg class="wires" viewBox="0 0 1752 ${H}" preserveAspectRatio="none" aria-hidden="true">
+  const cv=$('#cv');cv.style.aspectRatio=`1752/${H2}`;
+  let html=`<svg class="wires" viewBox="0 0 1752 ${H2}" preserveAspectRatio="none" aria-hidden="true">
     <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#d71920"/></marker>
     <marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1565c0"/></marker></defs>`;
   C.inputs.forEach((g,i)=>{html+=`<path class="w r" id="wi-${g.key}" d="M501 ${IC(i)}H548"/>`});
   if(C.inputs.length)html+=`<path class="w r" id="bus-in" d="M548 ${IC(0)}V${IC(C.inputs.length-1)}"/>`;
   html+=`<path class="w r" id="trunk-in" d="M548 ${mid}H644" marker-end="url(#ar)"/><path class="w b" id="trunk-out" d="M1092 ${mid}H1132"/>`;
-  C.outputs.forEach((o,i)=>{html+=`<path class="w b" id="wo-${o.key}" d="M1132 ${RY(i)+RH/2}H1200" marker-end="url(#ab)"/>`});
-  if(C.outputs.length)html+=`<path class="w b" id="bus-out" d="M1132 ${RY(0)+RH/2}V${RY(C.outputs.length-1)+RH/2}"/>`;
+  CO.forEach((o,i)=>{html+=`<path class="w b" id="wo-${o.key}" d="M1132 ${RY(i)+RH/2}H1200" marker-end="url(#ab)"/>`});
+  if(CO.length)html+=`<path class="w b" id="bus-out" d="M1132 ${RY(0)+RH/2}V${RY(CO.length-1)+RH/2}"/>`;
   html+=`</svg>
-  <div class="abs U box" style="--x:24;--y:10;--w:542;--h:${H-22}"></div>
+  <div class="abs U box" style="--x:24;--y:10;--w:542;--h:${H2-22}"></div>
   <div class="abs U hdr in" style="--x:24;--y:10;--w:542;--h:72"><b>INPUT</b><span>(Initiating Devices)</span></div>
   <div class="abs U hdr proc" style="--x:617;--y:10;--w:503;--h:72"><b>PROCESS</b><span>(Control &amp; Monitoring)</span></div>
-  <div class="abs U box out" style="--x:1171;--y:10;--w:572;--h:${H-22}"></div>
+  <div class="abs U box out" style="--x:1171;--y:10;--w:572;--h:${H2-22}"></div>
   <div class="abs U hdr out" style="--x:1171;--y:10;--w:572;--h:72"><b>OUTPUT</b><span>(Notification &amp; Control Actions)</span></div>
   <img class="abs U" style="--x:722;--y:${scrY-92};--w:306;--h:82" src="${ASSETS['def:logo']}" alt="Notifier by Honeywell">
   <div class="abs U scr" id="scr" style="--x:652;--y:${scrY};--w:432;--h:414">
@@ -334,7 +364,8 @@ function build(){
     <div class="scr-main"><div class="scr-h" id="scr-h">SYSTEM NORMAL</div><div class="scr-c" id="scr-c"></div><div class="scr-list" id="scr-list"></div><div class="scr-o" id="scr-o"></div></div>
     <div class="scr-leds"><span class="sl pw"><i></i>Power</span><span class="sl pre" id="sl-pre"><i></i>1st Alarm</span><span class="sl fi" id="sl-fire"><i></i>2nd Alarm</span><span class="sl su" id="sl-sup"><i></i>Supervisory</span><span class="sl si" id="sl-sil"><i></i>Sig. Silenced</span></div>
   </div>
-  <div class="abs U cap" id="cap" style="--x:678;--y:${scrY+424};--w:378;--h:58"><b>Fire Alarm Control Panel (FACP)</b><span id="cap-s">(Addressable)</span></div>`;
+  <div class="abs U cap" id="cap" style="--x:678;--y:${scrY+424};--w:378;--h:58"><b>Fire Alarm Control Panel (FACP)</b><span id="cap-s">(Addressable)</span></div>`+
+  (SG.length?`<div class="abs U sgs" style="--x:652;--y:${scrY+492};--w:432;--h:${sgH}"><div class="sgs-h"><span class="wedge"></span>Supervisory / monitoring signals</div><div class="sgs-l">${SG.map(o=>`<div class="sg" id="o-${o.key}"><span class="wedge"></span><span class="sgn">${esc(o.name)}</span><span class="sgs-st" id="st-${o.key}">Standby</span></div>`).join('')}</div></div>`:'');
   C.inputs.forEach((g,i)=>{
     const im=asset(g.img);
     html+=`<div class="abs U card in" id="i-${g.key}" style="--x:40;--y:${IY[i]};--w:452;--h:${IH[i]}">
@@ -342,7 +373,7 @@ function build(){
       <div class="txt"><div class="t">${esc(g.name)}</div><div class="s">${esc(g.sub)}</div>
       <div class="btns">${g.points.map(p=>`<button class="tg" data-pt="${esc(p.id)}" aria-pressed="false"><i></i>${esc(p.label||p.id)}</button>`).join('')}</div></div><span class="dot"></span></div>`;
   });
-  C.outputs.forEach((o,i)=>{
+  CO.forEach((o,i)=>{
     const im=asset(o.img);
     html+=`<div class="abs U card out${o.kind==='audible'?' shake':''}" id="o-${o.key}" style="--x:1206;--y:${RY(i)};--w:522;--h:${RH}">
       <div class="ph">${im?`<img src="${im}" alt="">`:'<span class="noimg">No photo</span>'}</div>
@@ -359,15 +390,38 @@ $('#cv').addEventListener('click',e=>{
 $('#cv').addEventListener('keydown',e=>{const ph=e.target.closest('.ph[data-first]');if(ph&&(e.key==='Enter'||e.key===' ')){e.preventDefault();ph.dataset.first&&toggle(ph.dataset.first)}});
 
 /* ---------- logic ---------- */
+function itemName(g,p){const n=g.name.replace(/ \(.*\)/,'');return p?(p.label?`${n} ${p.label.toLowerCase().replace(/\b\w/g,m=>m.toUpperCase())}`:`${n} ${p.id}`):n}
+function causeText(r){
+  const C=cfg();
+  const parts=(r.when||[]).map(c=>{
+    const items=[];(c.groups||[]).forEach(k=>{const g=C.inputs.find(x=>x.key===k);if(g)items.push(itemName(g))});
+    (c.points||[]).forEach(id=>{const f=findPoint(id);if(f)items.push(f.g.points.length>1?itemName(f.g,f.p):itemName(f.g))});
+    if(!items.length)return '(choose devices)';
+    const n=Math.max(1,+c.min||1);let s;
+    if(n===1)s=items.join(' Or ');
+    else if(items.length===n)s=items.join(' & ');
+    else if(items.length===1)s=Array(n).fill(items[0]).join(' & ');
+    else s=`Any ${n} of (${items.join(' Or ')})`;
+    if(+c.hold)s+=` (for ${+c.hold} min)`;
+    return (r.when.length>1&&n===1&&items.length>1)?`(${s})`:s;
+  });
+  const act={fire:'Double Activation',pre:'Single Activation',sup:'Supervisory'}[r.type];
+  return `${parts.join(' & ')||'(no cause yet)'} (${act})`;
+}
 function cset(c){const C=cfg(),s=new Set(c.points||[]);(c.groups||[]).forEach(k=>{const g=C.inputs.find(x=>x.key===k);if(g)g.points.forEach(p=>s.add(p.id))});return s}
 function findPoint(id){for(const g of cfg().inputs){const p=g.points.find(p=>p.id===id);if(p)return {g,p}}return null}
 function compute(){
   const C=cfg();
   const cnt=k=>{const g=C.inputs.find(x=>x.key===k);return g?g.points.filter(p=>S.on.has(p.id)).length:0};
   const t=Date.now(), counting=[];
-  const delayed=[];
+  const delayed=[],holding=[];
   const matched=C.rules.filter(r=>{
-    const ok=r.when.length&&r.when.every(c=>{const s=cset(c);return s.size&&[...s].filter(id=>S.on.has(id)).length>=Math.max(1,+c.min||1)});
+    const ok=r.when.length&&r.when.map((c,j)=>{const s=cset(c);const raw=s.size&&[...s].filter(id=>S.on.has(id)).length>=Math.max(1,+c.min||1);
+      const hk=r.id+'#'+j,hold=Math.max(0,+c.hold||0)*60;
+      if(!raw){delete S.hold[hk];return false}
+      if(!hold)return true;
+      if(!S.hold[hk])S.hold[hk]=t;const left=Math.ceil(hold-(t-S.hold[hk])/1000);
+      if(left>0){holding.push({r,left});return false}return true}).every(Boolean);
     if(!ok){Object.keys(S.since).forEach(k=>{if(k.startsWith(r.id+'|'))delete S.since[k]});return false}
     return true;
   });
@@ -376,14 +430,14 @@ function compute(){
     if(left>0){counting.push({r,o,left,d});return false}delayed.push({r,o,d,k});return true};
   const sorted=[...matched].sort((a,b)=>TYPE[b.type].rank-TYPE[a.type].rank);
   const top=sorted[0]||null;
-  const outState={},inState={};
+  const outState={},inState={},outMark={};
   matched.forEach(r=>{
-    r.outputs.forEach(o=>{if(!live(r,o))return;if(!outState[o]||TYPE[r.type].rank>TYPE[outState[o]].rank)outState[o]=r.type});
+    r.outputs.forEach(o=>{if(!live(r,o))return;const mk=(r.marks||{})[o]==='sup';if(!mk||!outMark[o])outMark[o]=mk?'sup':'on';if(!mk&&outMark[o]==='sup')outMark[o]='on';if(!outState[o]||TYPE[r.type].rank>TYPE[outState[o]].rank)outState[o]=r.type});
     r.when.forEach(c=>{const s=cset(c);C.inputs.forEach(g=>{const k=g.key;if(g.points.some(p=>s.has(p.id)&&S.on.has(p.id))&&(!inState[k]||TYPE[r.type].rank>TYPE[inState[k]].rank))inState[k]=r.type})});
   });
   const vr=sorted.find(r=>r.voice&&C.voices.some(v=>v.id===r.voice));
   const pts=C.inputs.flatMap(g=>g.points.filter(p=>S.on.has(p.id)).map(p=>({g,p})));
-  return {matched,sorted,top,outState,inState,voice:vr?vr.voice:null,pts,counting,delayed};
+  return {matched,sorted,top,outState,inState,voice:vr?vr.voice:null,pts,counting,delayed,holding,outMark};
 }
 function now(){return new Date().toLocaleTimeString('en-GB',{hour12:false})}
 function log(cls,txt){S.log.unshift({t:now(),cls,txt});if(S.log.length>200)S.log.pop();renderLog()}
@@ -432,6 +486,7 @@ function render(c){
   const vName=c.voice?C.voices.find(v=>v.id===c.voice)?.name:'';
   C.outputs.forEach(o=>{
     const el=$('#o-'+o.key);if(!el)return;const st=c.outState[o.key]||'';
+    if(o.kind==='signal'){el.className='sg'+(st?' on '+st:'');$('#st-'+o.key).textContent=st?(c.outMark[o.key]==='sup'?'◤ Signal':'● Active'):'Standby';return}
     el.classList.toggle('fire',st==='fire');el.classList.toggle('pre',st==='pre');el.classList.toggle('sup',st==='sup');
     el.classList.toggle('sil',!!st&&S.sil);
     let t='Standby';
@@ -444,9 +499,9 @@ function render(c){
       else t=o.onText||'Active';
     }
     $('#st-'+o.key).textContent=t;
-    $('#wo-'+o.key).classList.toggle('live',!!st||!!cdo);
+    $('#wo-'+o.key)?.classList.toggle('live',!!st||!!cdo);
   });
-  const anyOut=Object.keys(c.outState).length>0;
+  const anyOut=Object.keys(c.outState).some(k=>C.outputs.find(o=>o.key===k)?.kind!=='signal');
   ['bus-out','trunk-out'].forEach(id=>$('#'+id)?.classList.toggle('live',anyOut));
   const scr=$('#scr');scr.className='abs U scr s'+rank+(S.ack?' ack':'');
   $('#sl-pre').classList.toggle('on',c.matched.some(r=>r.type==='pre'));$('#sl-fire').classList.toggle('on',rank===3);
@@ -459,21 +514,22 @@ function render(c){
   const lines=c.pts.map((x,i)=>`<div>${String(i+1).padStart(2,'0')} ${esc(x.p.addr)} ${esc(x.p.id)} ${esc(x.p.label?x.p.label:x.g.name.replace(/ \(.*\)/,''))}</div>`);
   c.counting.forEach(x=>lines.push(`<div class="w3">${esc((C.outputs.find(o=>o.key===x.o)?.name||x.o).toUpperCase())} IN ${x.left} s</div>`));
   c.delayed.forEach(x=>lines.push(`<div class="w2">${esc((C.outputs.find(o=>o.key===x.o)?.name||x.o).toUpperCase())} ACTIVATED</div>`));
+  c.holding.forEach(x=>lines.push(`<div class="w3">${esc(TYPE[x.r.type].label.toUpperCase())} IN ${Math.floor(x.left/60)}:${String(x.left%60).padStart(2,'0')} · ${esc(x.r.name.toUpperCase())}</div>`));
   const seen=new Set();
   c.sorted.forEach(r=>(r.lines||'').split('\n').map(s=>s.trim()).filter(Boolean).forEach(l=>{if(!seen.has(l)){seen.add(l);lines.push(`<div class="${r.type==='sup'?'w3':'w2'}">${esc(l)}</div>`)}}));
   $('#scr-list').innerHTML=lines.length?lines.slice(0,7).join('')+(lines.length>7?`<div class="dim">+${lines.length-7} more</div>`:''):'<div class="dim">No active events</div>';
-  const on=Object.keys(c.outState);
-  $('#scr-o').textContent='OUTPUTS: '+(on.length===0?'NONE':on.length===C.outputs.length?'ALL ON':on.map(k=>C.outputs.find(o=>o.key===k)?.name.toUpperCase()).join(', '))+(S.sil&&on.length?' · SILENCED':'');
+  const on=Object.keys(c.outState).filter(k=>C.outputs.find(o=>o.key===k)?.kind!=='signal');const nCO=C.outputs.filter(o=>o.kind!=='signal').length;
+  $('#scr-o').textContent='OUTPUTS: '+(on.length===0?'NONE':on.length===nCO?'ALL ON':on.map(k=>C.outputs.find(o=>o.key===k)?.name.toUpperCase()).join(', '))+(S.sil&&on.length?' · SILENCED':'');
   $('#stage').className='stage s'+rank;
   $('#pill').textContent=c.top?TYPE[c.top.type].pill:(S.on.size?'No rule':'Normal');
   $('#stage-txt').textContent=c.top?`${c.top.name}. Outputs on: ${outNames(c.top)}.${c.matched.length>1?' Also matched: '+c.matched.filter(r=>r!==c.top).map(r=>r.name).join('; ')+'.':''}`:(S.on.size?'Device in alarm, but no cause & effect rule matches it.':'System normal. No devices in alarm.');
   $('#k-sil').setAttribute('aria-pressed',S.sil);$('#k-ack').setAttribute('aria-pressed',S.ack);
 }
 function ruleSummary(){
-  const C=cfg();const pname=id=>{const f=findPoint(id);return f?`${f.g.name.replace(/ \(.*\)/,'')} ${f.p.label||f.p.id}`:id};const gname=k=>C.inputs.find(g=>g.key===k)?.name.replace(/ \(.*\)/,'')||'?';
-  $('#rule-sum').innerHTML=C.rules.map(r=>`<span><b>${esc(TYPE[r.type].label)}: ${esc(r.name)}</b> — when ${r.when.map(c=>`${c.min||1}+ of ${[...c.groups.map(gname),...(c.points||[]).map(pname)].join(' / ')||'(nothing)'}`).join(' AND ')} → ${esc(outNames(r))}</span>`).join('');
+  const C=cfg();
+  $('#rule-sum').innerHTML=C.rules.map(r=>`<span><b>${esc(TYPE[r.type].label)}:</b> ${esc(causeText(r))} → ${esc(outNames(r))}</span>`).join('');
 }
-$('#k-reset').addEventListener('click',()=>{if(!S.on.size)return;S.on.clear();S.sil=false;S.ack=false;S.since={};log('ok','PANEL RESET · all devices restored · outputs OFF');evaluate()});
+$('#k-reset').addEventListener('click',()=>{if(!S.on.size)return;S.on.clear();S.sil=false;S.ack=false;S.since={};S.hold={};log('ok','PANEL RESET · all devices restored · outputs OFF');evaluate()});
 $('#k-sil').addEventListener('click',()=>{if(S.top<2)return;S.sil=!S.sil;log(S.sil?'pre':'fire',S.sil?'SIGNAL SILENCE · announcement, bell & horn silenced · outputs still active':'SIGNALS RESOUNDED · announcement, bell & horn ON');evaluate(true)});
 $('#k-ack').addEventListener('click',()=>{if(!S.on.size||S.ack)return;S.ack=true;log('ok','ACKNOWLEDGED · events accepted · panel buzzer silenced');evaluate(true)});
 setInterval(()=>evaluate(),1000);
@@ -520,7 +576,7 @@ function setInfo(){
 function normalise(c){
   const d=clone(DEFAULT_CONFIG);if(!c||!Array.isArray(c.inputs))return d;
   c.voices=c.voices||d.voices;c.rules=c.rules||[];c.outputs=c.outputs||[];
-  c.rules.forEach(r=>{r.delays=r.delays||{};if(r.delay){r.outputs.forEach(o=>r.delays[o]=+r.delay);delete r.delay}r.when.forEach(w=>{w.groups=w.groups||[];w.points=w.points||[]})});return c;
+  c.rules.forEach(r=>{r.delays=r.delays||{};r.marks=r.marks||{};r.zone=r.zone||'General';if(r.delay){r.outputs.forEach(o=>r.delays[o]=+r.delay);delete r.delay}r.when.forEach(w=>{w.groups=w.groups||[];w.points=w.points||[]})});return c;
 }
 async function load(){
   try{
@@ -595,9 +651,10 @@ function renderEditor(){
     C.outputs.map((o,i)=>`<div class="item">${picBlock('outputs',i,o.img)}<div class="fields">
       <div class="row2"><label class="f">Device name<input type="text" data-k="outputs.${i}.name" value="${esc(o.name)}"></label><label class="f">Description<input type="text" data-k="outputs.${i}.sub" value="${esc(o.sub)}"></label></div>
       <div class="row2"><label class="f">Status text when ON<input type="text" data-k="outputs.${i}.onText" value="${esc(o.onText)}"></label>
+      <label class="f">Matrix column group<input type="text" data-k="outputs.${i}.group" value="${esc(o.group||'Notification Devices')}" list="ogroups"></label>
       <label class="f">Type<select data-k="outputs.${i}.kind">${Object.entries(KIND).map(([k,v])=>`<option value="${k}" ${o.kind===k?'selected':''}>${v}</option>`).join('')}</select></label></div>
       ${tools('outputs',i,C.outputs.length)}</div></div>`).join('')+
-    `<div><button class="btn pri" data-act="add" data-kind="outputs">+ Add output device</button></div>`;
+    `<datalist id="ogroups"><option value="Control Unit Annunciation"><option value="Notification Devices"><option value="Supplementary"></datalist><div><button class="btn pri" data-act="add" data-kind="outputs">+ Add output device</button></div>`;
   }else if(tab==='rules'){
     b.innerHTML=logicView==='matrix'?matrixHTML(C):sentenceHTML(C);
   }else{
@@ -613,38 +670,51 @@ let logicView='matrix';
 const LET=i=>String.fromCharCode(65+i);
 function viewSwitch(){return `<div class="vsw" role="group" aria-label="Logic view"><button class="btn ${logicView==='matrix'?'pri':''}" data-act="view" data-v="matrix">C&amp;E matrix (table)</button><button class="btn ${logicView==='sent'?'pri':''}" data-act="view" data-v="sent">Sentences (When… Then…)</button><span class="hint">Both views edit the same rules — change one and the other follows.</span></div>`}
 function typeSel(r,i){return `<select class="tsel t-${r.type}" data-k="rules.${i}.type" aria-label="Rule type">${Object.entries(TYPE).map(([k,v])=>`<option value="${k}" ${r.type===k?'selected':''}>${v.label}</option>`).join('')}</select>`}
+function colOrder(C){const groups=[];C.outputs.forEach(o=>{const g=o.group||'Notification Devices';if(!groups.includes(g))groups.push(g)});
+  const pri=['Control Unit Annunciation','Notification Devices'];groups.sort((a,b)=>{const ia=pri.indexOf(a),ib=pri.indexOf(b);return (ia<0?9:ia)-(ib<0?9:ib)});
+  return groups.map(g=>({g,cols:C.outputs.filter(o=>(o.group||'Notification Devices')===g)}))}
+function zoneOrder(C){const z=[];C.rules.forEach(r=>{const k=r.zone||'General';if(!z.includes(k))z.push(k)});return z}
+function condEditor(r,i,C){
+  return r.when.map((c,j)=>`<div class="sent"><span class="kw">${j?'&amp; (AND)':'WHEN'}</span> any <input type="number" min="1" max="20" data-k="rules.${i}.when.${j}.min" value="${c.min||1}" aria-label="How many"> of these (Or):
+      <span class="hold">for <input type="number" min="0" max="120" step="0.5" data-k="rules.${i}.when.${j}.hold" value="${+c.hold||0}" aria-label="Minutes held"> min</span>
+      <button class="btn sm dan" data-act="delcond" data-i="${i}" data-j="${j}">Remove</button>
+      <div class="checks">${C.inputs.map(g=>`<label class="chk"><input type="checkbox" data-act="cg" data-i="${i}" data-j="${j}" data-g="${g.key}" ${c.groups.includes(g.key)?'checked':''}>${esc(g.name.replace(/ \(.*\)/,''))}${g.points.length>1?' (any)':''}</label>`+(g.points.length>1?g.points.map(p=>`<label class="chk sub"><input type="checkbox" data-act="cp" data-i="${i}" data-j="${j}" data-p="${esc(p.id)}" ${(c.points||[]).includes(p.id)?'checked':''}>${esc(p.label||p.id)}</label>`).join(''):'')).join('')}</div></div>`).join('')+
+    `<div><button class="btn sm" data-act="addcond" data-i="${i}">+ &amp; (AND) another condition</button></div>`;
+}
+let openCause=null;
 function matrixHTML(C){
-  const pts=C.inputs.flatMap(g=>g.points.map(p=>({g,p})));
-  let h=viewSwitch()+`<p class="hint"><b>Input cells:</b> tap to cycle <span class="mk">A</span> → <span class="mk">B</span> → … → blank. Inputs with the same letter form one group; the rule is ON when <b>every</b> letter reaches its count in <b>Need</b>. <b>Output cells:</b> tap to cycle <span class="mk on">●</span> on at once → <span class="mk dl">⏱</span> on after a delay (type the seconds) → blank (tap the ⏱ to clear).</p>
-  <div class="mx-wrap"><table class="mx"><thead><tr><th rowspan="2" class="stk">Rule (cause)</th><th rowspan="2">Type</th>`;
-  C.inputs.forEach(g=>h+=`<th colspan="${g.points.length}" class="gh in">${esc(g.name.replace(/ \(.*\)/,''))}</th>`);
-  h+=`<th rowspan="2" class="need">Need</th><th colspan="${C.outputs.length}" class="gh out">Outputs (effect)</th><th rowspan="2">Test</th></tr><tr>`;
-  pts.forEach(x=>h+=`<th class="vt in"><span>${esc(x.p.label||x.p.id)}</span></th>`);
-  C.outputs.forEach(o=>h+=`<th class="vt out"><span>${esc(o.name)}</span></th>`);
+  const groups=colOrder(C),ncol=C.outputs.length;
+  let h=viewSwitch()+`<div class="legend"><span><span class="mk on">●</span> Activate (general evacuation / device ON)</span><span><span class="mk sg">◤</span> Supervisory signal</span><span><span class="mk dl">⏱</span> Activate after delay</span><span class="hint">Tap a cell to cycle ● → ◤ → ⏱ → blank. Tap a cause to edit it with &amp; / Or.</span></div>
+  <div class="mx-wrap"><table class="mx"><thead><tr><th rowspan="2" class="stk diag"><span class="so">System Output</span><span class="si">System Input</span></th><th rowspan="2">Level</th>`;
+  groups.forEach(x=>h+=`<th colspan="${x.cols.length}" class="gh">${esc(x.g)}</th>`);
+  h+=`<th rowspan="2">Test</th></tr><tr>`;
+  groups.forEach(x=>x.cols.forEach(o=>h+=`<th class="vt"><span>${esc(o.name)}</span></th>`));
   h+=`</tr></thead><tbody>`;
-  C.rules.forEach((r,i)=>{
-    const sets=r.when.map(cset);
-    h+=`<tr class="r-${r.type}"><td class="stk"><div class="rn"><input type="text" data-k="rules.${i}.name" value="${esc(r.name)}" aria-label="Rule name"><button class="x" data-act="del" data-kind="rules" data-i="${i}" title="Delete rule" aria-label="Delete rule">×</button></div></td><td>${typeSel(r,i)}</td>`;
-    pts.forEach(x=>{const L=sets.map((s,j)=>s.has(x.p.id)?LET(j):'').filter(Boolean).join(',');
-      h+=`<td class="c in${L?' set':''}" data-act="mx-in" data-i="${i}" data-p="${esc(x.p.id)}" title="${esc(x.g.name+' · '+(x.p.label||x.p.id))}">${L?`<span class="mk">${L}</span>`:''}</td>`});
-    h+=`<td class="need">${r.when.map((c,j)=>`<label><span class="mk">${LET(j)}</span>≥<input type="number" min="1" max="20" data-k="rules.${i}.when.${j}.min" value="${c.min||1}" aria-label="Need for ${LET(j)}"></label>`).join('')||'<span class="hint">tap inputs</span>'}</td>`;
-    C.outputs.forEach(o=>{const on=r.outputs.includes(o.key),d=+(r.delays||{})[o.key]||0;
-      h+=`<td class="c out${on?' set':''}" data-act="mx-out" data-i="${i}" data-o="${o.key}" title="${esc(o.name)}">${on?(d?`<span class="mk dl"><b title="Tap to turn off">⏱</b><input type="number" min="1" max="600" data-k="rules.${i}.delays.${o.key}" value="${d}" aria-label="Delay seconds">s</span>`:'<span class="mk on">●</span>'):''}</td>`});
-    h+=`<td><button class="btn sm" data-act="test" data-i="${i}" aria-label="Test ${esc(r.name)}">▶</button></td></tr>`;
+  zoneOrder(C).forEach(z=>{
+    h+=`<tr class="zr"><td class="stk zt" colspan="2">${esc(z)}</td><td colspan="${ncol+1}"></td></tr>`;
+    C.rules.forEach((r,i)=>{if((r.zone||'General')!==z)return;
+      h+=`<tr class="r-${r.type}"><td class="stk cause" data-act="cause" data-i="${i}" title="Tap to edit this cause"><span class="ct">${esc(causeText(r))}</span><span class="rnm">${esc(r.name)}</span></td><td>${typeSel(r,i)}</td>`;
+      groups.forEach(x=>x.cols.forEach(o=>{const on=r.outputs.includes(o.key),d=+(r.delays||{})[o.key]||0,sg=(r.marks||{})[o.key]==='sup';
+        h+=`<td class="c${on?' set':''}" data-act="mx-out" data-i="${i}" data-o="${o.key}" title="${esc(o.name)}">${on?(d?`<span class="mk dl"><b title="Tap to clear">⏱</b><input type="number" min="1" max="600" data-k="rules.${i}.delays.${o.key}" value="${d}" aria-label="Delay seconds">s</span>`:sg?'<span class="mk sg">◤</span>':'<span class="mk on">●</span>'):''}</td>`}));
+      h+=`<td><button class="btn sm" data-act="test" data-i="${i}" aria-label="Test">▶</button></td></tr>`;
+      if(openCause===r.id)h+=`<tr class="ced"><td colspan="${ncol+3}"><div class="ced-in">
+        <div class="row2"><label class="f">Rule name<input type="text" data-k="rules.${i}.name" value="${esc(r.name)}"></label><label class="f">Zone / section<input type="text" data-k="rules.${i}.zone" value="${esc(r.zone||'')}" list="zones"></label></div>
+        ${condEditor(r,i,C)}<div class="item-tools"><button class="btn sm pri" data-act="cause" data-i="${i}">Done</button><span class="sp"></span><button class="btn sm dan" data-act="del" data-kind="rules" data-i="${i}">Delete rule</button></div></div></td></tr>`;
+    });
   });
-  h+=`</tbody></table></div><div class="item-tools"><button class="btn pri" data-act="add" data-kind="rules">+ Add rule</button><span class="hint">Screen text, voice message and rule order are set in the Sentences view.</span></div>`;
+  h+=`</tbody></table></div><datalist id="zones">${zoneOrder(C).map(z=>`<option value="${esc(z)}">`).join('')}</datalist>
+  <div class="item-tools"><button class="btn pri" data-act="add" data-kind="rules">+ Add cause (row)</button><span class="hint">Screen text, voice message and row order are set in the Sentences view.</span></div>`;
   return h;
 }
 function sentenceHTML(C){
   return viewSwitch()+`<p class="hint">A rule is ON when <b>all</b> its WHEN lines are true. If several rules are ON, every output they list turns on; the screen and voice follow the strongest rule (2nd Alarm &gt; 1st Alarm &gt; Supervisory, then the order below).</p>`+
   C.rules.map((r,i)=>`<div class="item rule-item type-${r.type}"><div class="fields">
     <div class="rhead"><input type="text" class="rname" data-k="rules.${i}.name" value="${esc(r.name)}" aria-label="Rule name">${typeSel(r,i)}<button class="btn sm" data-act="test" data-i="${i}">▶ Test</button></div>
-    ${r.when.map((c,j)=>`<div class="sent"><span class="kw">${j?'AND':'WHEN'}</span> at least <input type="number" min="1" max="20" data-k="rules.${i}.when.${j}.min" value="${c.min||1}" aria-label="Minimum count"> of these are active:
-      <button class="btn sm dan" data-act="delcond" data-i="${i}" data-j="${j}">Remove</button>
-      <div class="checks">${C.inputs.map(g=>`<label class="chk"><input type="checkbox" data-act="cg" data-i="${i}" data-j="${j}" data-g="${g.key}" ${c.groups.includes(g.key)?'checked':''}>${esc(g.name.replace(/ \(.*\)/,''))}${g.points.length>1?' (any)':''}</label>`+(g.points.length>1?g.points.map(p=>`<label class="chk sub"><input type="checkbox" data-act="cp" data-i="${i}" data-j="${j}" data-p="${esc(p.id)}" ${(c.points||[]).includes(p.id)?'checked':''}>${esc(p.label||p.id)}</label>`).join(''):'')).join('')}</div></div>`).join('')}
-    <div><button class="btn sm" data-act="addcond" data-i="${i}">+ AND another condition</button></div>
+    <div class="ctline">${esc(causeText(r))}</div>
+    <label class="f">Zone / section<input type="text" data-k="rules.${i}.zone" value="${esc(r.zone||'')}"></label>
+    ${condEditor(r,i,C)}
     <div class="sent"><span class="kw then">THEN</span> turn on: <button class="btn sm" data-act="allout" data-i="${i}">All</button> <button class="btn sm" data-act="noout" data-i="${i}">None</button>
-      <div class="checks">${C.outputs.map(o=>{const on=r.outputs.includes(o.key),d=+(r.delays||{})[o.key]||0;return `<label class="chk"><input type="checkbox" data-act="ro" data-i="${i}" data-o="${o.key}" ${on?'checked':''}>${esc(o.name)}${on?`<span class="dly">after <input type="number" min="0" max="600" data-k="rules.${i}.delays.${o.key}" value="${d}" aria-label="Delay seconds"> s</span>`:''}</label>`}).join('')}</div></div>
+      <div class="checks">${C.outputs.map(o=>{const on=r.outputs.includes(o.key),d=+(r.delays||{})[o.key]||0;const sg=(r.marks||{})[o.key]==='sup';return `<label class="chk"><input type="checkbox" data-act="ro" data-i="${i}" data-o="${o.key}" ${on?'checked':''}>${esc(o.name)}${on?`<button class="mkb ${sg?'sg':'on'}" data-act="mk" data-i="${i}" data-o="${o.key}" title="● activate / ◤ supervisory signal">${sg?'◤':'●'}</button><span class="dly">after <input type="number" min="0" max="600" data-k="rules.${i}.delays.${o.key}" value="${d}" aria-label="Delay seconds"> s</span>`:''}</label>`}).join('')}</div></div>
     <div class="row2"><label class="f">Screen heading<input type="text" data-k="rules.${i}.screen" value="${esc(r.screen)}" placeholder="e.g. 2ND ALARM"></label>
     <label class="f">Voice message<select data-k="rules.${i}.voice"><option value="">None</option>${C.voices.map(v=>`<option value="${v.id}" ${r.voice===v.id?'selected':''}>${esc(v.name)}</option>`).join('')}</select></label></div>
     <label class="f">Extra screen lines (one per line)<textarea data-k="rules.${i}.lines">${esc(r.lines)}</textarea></label>
@@ -668,21 +738,23 @@ function mxIn(r,pid){
   r.when.forEach(c=>{c.min=Math.min(Math.max(1,+c.min||1),cset(c).size)});
 }
 function mxOut(r,o){
-  r.delays=r.delays||{};
-  if(!r.outputs.includes(o)){r.outputs.push(o);delete r.delays[o]}
-  else if(!(+r.delays[o]))r.delays[o]=30;
-  else{r.outputs=r.outputs.filter(x=>x!==o);delete r.delays[o]}
+  r.delays=r.delays||{};r.marks=r.marks||{};
+  const on=r.outputs.includes(o),sg=r.marks[o]==='sup',d=+r.delays[o]||0;
+  if(!on){r.outputs.push(o);delete r.marks[o];delete r.delays[o]}
+  else if(!sg&&!d){r.marks[o]='sup'}
+  else if(sg){delete r.marks[o];r.delays[o]=30}
+  else{r.outputs=r.outputs.filter(x=>x!==o);delete r.delays[o];delete r.marks[o]}
 }
 function testRule(r){
   const pick=new Set();
   r.when.forEach(c=>{const s=[...cset(c)];let n=[...s].filter(id=>pick.has(id)).length;for(const id of s){if(n>=(+c.min||1))break;if(!pick.has(id)){pick.add(id);n++}}});
-  S.on=pick;S.sil=false;S.ack=false;S.since={};S.matched=new Set();log('ok',`TEST · ${r.name} · triggered ${[...pick].join(', ')||'nothing'}`);evaluate();
+  S.on=pick;S.sil=false;S.ack=false;S.since={};S.hold={};S.matched=new Set();log('ok',`TEST · ${r.name} · triggered ${[...pick].join(', ')||'nothing'}`);evaluate();
   $('#cv').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function setPath(o,path,v){const k=path.split('.');let x=o;for(let i=0;i<k.length-1;i++){if(x[k[i]]==null)x[k[i]]={};x=x[k[i]]}x[k[k.length-1]]=v}
 $('#ed-body').addEventListener('input',e=>{
   const k=e.target.dataset.k;if(!k)return;
-  let v=e.target.value;if(e.target.type==='number')v=/\.delays\./.test(k)?Math.max(0,parseInt(v)||0):Math.max(1,parseInt(v)||1);
+  let v=e.target.value;if(e.target.type==='number')v=/\.hold$/.test(k)?Math.max(0,parseFloat(v)||0):/\.delays\./.test(k)?Math.max(0,parseInt(v)||0):Math.max(1,parseInt(v)||1);
   const pm=k.match(/^inputs\.(\d+)\.points\.(\d+)\.id$/);
   if(pm){const old=draft.inputs[+pm[1]].points[+pm[2]].id;draft.rules.forEach(r=>r.when.forEach(c=>{if(c.points)c.points=c.points.map(p=>p===old?v:p)}))}
   setPath(draft,k,v);changed(/\.(type)$/.test(k));
@@ -691,7 +763,7 @@ $('#ed-body').addEventListener('change',e=>{
   const t=e.target,a=t.dataset.act;if(!a)return;const r=draft.rules[+t.dataset.i];
   if(a==='cp'){const c=r.when[+t.dataset.j];const P=c.points||[];c.points=t.checked?[...new Set([...P,t.dataset.p])]:P.filter(x=>x!==t.dataset.p);changed()}
   if(a==='cg'){const c=r.when[+t.dataset.j];c.groups=t.checked?[...new Set([...c.groups,t.dataset.g])]:c.groups.filter(x=>x!==t.dataset.g);changed()}
-  if(a==='ro'){r.outputs=t.checked?[...new Set([...r.outputs,t.dataset.o])]:r.outputs.filter(x=>x!==t.dataset.o);if(!t.checked&&r.delays)delete r.delays[t.dataset.o];changed(true)}
+  if(a==='ro'){r.outputs=t.checked?[...new Set([...r.outputs,t.dataset.o])]:r.outputs.filter(x=>x!==t.dataset.o);if(!t.checked){if(r.delays)delete r.delays[t.dataset.o];if(r.marks)delete r.marks[t.dataset.o]}changed(true)}
 });
 let fileTarget=null;
 $('#ed-body').addEventListener('click',e=>{
@@ -699,7 +771,8 @@ $('#ed-body').addEventListener('click',e=>{
   const b=e.target.closest('button[data-act],td[data-act]');if(!b)return;
   const a=b.dataset.act,kind=b.dataset.kind,i=+b.dataset.i,j=+b.dataset.j,L=draft[kind];
   if(a==='view'){logicView=b.dataset.v;renderEditor();return}
-  if(a==='mx-in'){mxIn(draft.rules[i],b.dataset.p);changed(true);return}
+  if(a==='cause'){const id=draft.rules[i].id;openCause=openCause===id?null:id;renderEditor();return}
+  if(a==='mk'){e.preventDefault();const r=draft.rules[i];r.marks=r.marks||{};if(r.marks[b.dataset.o]==='sup')delete r.marks[b.dataset.o];else r.marks[b.dataset.o]='sup';changed(true);return}
   if(a==='mx-out'){mxOut(draft.rules[i],b.dataset.o);changed(true);return}
   if(a==='test'){testRule(draft.rules[i]);return}
   if(a==='up'&&i>0){[L[i-1],L[i]]=[L[i],L[i-1]];changed(true)}
@@ -713,8 +786,9 @@ $('#ed-body').addEventListener('click',e=>{
   }
   if(a==='add'){
     if(kind==='inputs'){L.push({key:uid('g'),name:'New input device',sub:'(Addressable)',img:'',points:[{id:'NEW-'+(L.length+1),addr:''}]});msg('ok','Input added. Open the “Logic (cause & effect)” tab to choose what it turns on.')}
-    if(kind==='outputs'){L.push({key:uid('o'),name:'New output device',sub:'',img:'',onText:'Active',kind:'control'});msg('ok','Output added. Open the “Logic (cause & effect)” tab and tick it in the rules that should turn it on.')}
-    if(kind==='rules')L.push({id:uid('r'),name:'New rule',type:'fire',when:[{groups:[],points:[],min:1}],outputs:[],delays:{},screen:'',lines:'',voice:''});
+    if(kind==='outputs'){L.push({key:uid('o'),name:'New output device',sub:'',img:'',onText:'Active',kind:'control',group:'Notification Devices'});msg('ok','Output added. Open the “Logic (cause & effect)” tab and tick it in the rules that should turn it on.')}
+    if(kind==='rules'){const nr={id:uid('r'),name:'New cause',type:'fire',zone:draft.rules[draft.rules.length-1]?.zone||'General',when:[{groups:[],points:[],min:1}],outputs:[],delays:{},marks:{},screen:'',lines:'',voice:''};L.push(nr);openCause=nr.id}
+    if(false)L.push({screen:'',lines:'',voice:''});
     if(kind==='voices')L.push({id:uid('v'),name:'New message',asset:''});
     changed(true);
   }
@@ -723,7 +797,7 @@ $('#ed-body').addEventListener('click',e=>{
   if(a==='addcond'){draft.rules[i].when.push({groups:[],points:[],min:1});changed(true)}
   if(a==='delcond'){draft.rules[i].when.splice(j,1);changed(true)}
   if(a==='allout'){draft.rules[i].outputs=draft.outputs.map(o=>o.key);changed(true)}
-  if(a==='noout'){draft.rules[i].outputs=[];draft.rules[i].delays={};changed(true)}
+  if(a==='noout'){draft.rules[i].outputs=[];draft.rules[i].delays={};draft.rules[i].marks={};changed(true)}
   if(a==='photo'){fileTarget={kind,i};$('#file-img').value='';$('#file-img').click()}
   if(a==='nophoto'){draft[kind][i].img='';changed(true)}
   if(a==='audio'){fileTarget={kind:'voices',i};$('#file-aud').value='';$('#file-aud').click()}
