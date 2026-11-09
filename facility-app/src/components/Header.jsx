@@ -1,39 +1,77 @@
-import { useEffect, useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useOffline } from '../context/OfflineContext'
 import { useAuth } from '../context/AuthContext'
 
-const sections = [
-  {
-    label: 'Main',
-    items: [
-      { to: '/', icon: 'ti-checkbox', label: 'Today' },
-      { to: '/scan', icon: 'ti-qrcode', label: 'Scan equipment' },
-      { to: '/sync', icon: 'ti-cloud-upload', label: 'Sync Centre' },
-      { to: '/signoff', icon: 'ti-signature', label: 'Review & approve', reviewerOnly: true },
-      { to: '/dashboard', icon: 'ti-layout-dashboard', label: 'Tracker' },
-      { to: '/parameter-chart', icon: 'ti-chart-line', label: 'Parameter chart' },
-      { to: '/history', icon: 'ti-history', label: 'History' },
-      { to: '/tasks', icon: 'ti-checklist', label: 'Tasks' },
-      { to: '/parts', icon: 'ti-package', label: 'Spare parts' },
-      { to: '/fe', icon: 'ti-fire-extinguisher', label: 'Fire extinguishers' },
-      { to: '/fe/list', icon: 'ti-list-details', label: 'FE list & expiry' },
-      { to: '/fe/expiry', icon: 'ti-calendar-exclamation', label: 'FE renewal & vendor' },
-      // A separate standalone page (public/fire-alarm-sim.html), opened with a normal link.
-      { href: '/fire-alarm-sim.html', icon: 'ti-alarm-smoke', label: 'Fire Alarm Simulator' },
-      // Standalone page too (public/fire-pump-sim.html).
-      { href: '/fire-pump-sim.html', icon: 'ti-gauge', label: 'Fire Pump Simulator' },
-    ],
-  },
-  {
-    label: 'More',
-    items: [
-      { to: '/admin', icon: 'ti-settings', label: 'Admin' },
-      { to: '/change-pin', icon: 'ti-key', label: 'Change my PIN' },
-      { to: '/help', icon: 'ti-help-circle', label: 'Help & guide' },
-    ],
-  },
+// Menu tree. Top items are always shown; each group opens and closes.
+// adminOnly / reviewerOnly items are hidden from other roles; a group with no
+// visible items is hidden.
+const TOP = [
+  { to: '/', icon: 'ti-checkbox', label: 'Today' },
+  { to: '/scan', icon: 'ti-qrcode', label: 'Scan equipment' },
+  { to: '/sync', icon: 'ti-cloud-upload', label: 'Sync Centre' },
 ]
+const GROUPS = [
+  { id: 'insp', icon: 'ti-clipboard-check', label: 'Inspections', items: [
+    { to: '/dashboard', icon: 'ti-layout-dashboard', label: 'Tracker' },
+    { to: '/history', icon: 'ti-history', label: 'History' },
+    { to: '/parameter-chart', icon: 'ti-chart-line', label: 'Parameter chart' },
+    { to: '/signoff', icon: 'ti-signature', label: 'Review & approve', reviewerOnly: true },
+  ] },
+  { id: 'tasks', icon: 'ti-checklist', label: 'Tasks', items: [
+    { to: '/tasks', icon: 'ti-list-check', label: 'Task list' },
+    { to: '/tasks/stages', icon: 'ti-adjustments-horizontal', label: 'Task stages', adminOnly: true },
+  ] },
+  { id: 'parts', icon: 'ti-package', label: 'Spare Parts', items: [
+    { to: '/parts', icon: 'ti-list-details', label: 'Parts list' },
+    { to: '/parts?view=Low+stock', icon: 'ti-alert-triangle', label: 'Low stock' },
+    { to: '/parts/import', icon: 'ti-file-import', label: 'Import parts', adminOnly: true },
+    { to: '/parts/photos', icon: 'ti-photo-plus', label: 'Import photos', adminOnly: true },
+    { to: '/parts/labels', icon: 'ti-qrcode', label: 'QR labels', adminOnly: true },
+  ] },
+  { id: 'fire', icon: 'ti-flame', label: 'Fire Safety', items: [
+    { to: '/fe', icon: 'ti-map-pin', label: 'FE map' },
+    { to: '/fe/list', icon: 'ti-fire-extinguisher', label: 'FE list & expiry' },
+    { to: '/fe/expiry', icon: 'ti-calendar-exclamation', label: 'FE renewal & vendor', also: ['/fe/expiry-bulk'] },
+    { to: '/fe/report', icon: 'ti-report', label: 'FE report' },
+    { to: '/fe/qr-labels', icon: 'ti-qrcode', label: 'FE QR labels', adminOnly: true },
+    { to: '/fe/admin', icon: 'ti-map-2', label: 'FE map setup', adminOnly: true },
+    // A separate standalone page (public/fire-alarm-sim.html), opened with a normal link.
+    { href: '/fire-alarm-sim.html', icon: 'ti-alarm-smoke', label: 'Fire Alarm Simulator' },
+  ] },
+  { id: 'admin', icon: 'ti-settings', label: 'Admin', items: [
+    { to: '/admin', icon: 'ti-home-cog', label: 'Admin home', adminOnly: true },
+    { to: '/admin/areas', icon: 'ti-building', label: 'Areas', adminOnly: true },
+    { to: '/admin/equipment', icon: 'ti-tool', label: 'Equipment', adminOnly: true },
+    { to: '/staff', icon: 'ti-users', label: 'Staff', adminOnly: true },
+    { to: '/admin/reports', icon: 'ti-file-analytics', label: 'Reports', adminOnly: true },
+    { to: '/admin/qr-labels', icon: 'ti-qrcode', label: 'QR labels', adminOnly: true },
+    { to: '/admin/database', icon: 'ti-database', label: 'Database update', adminOnly: true },
+  ] },
+  { id: 'me', icon: 'ti-user-circle', label: 'Me', items: [
+    { to: '/change-pin', icon: 'ti-key', label: 'Change my PIN' },
+    { to: '/help', icon: 'ti-help-circle', label: 'Help & guide' },
+  ] },
+]
+const ALL_ITEMS = [...TOP, ...GROUPS.flatMap((g) => g.items)].filter((i) => i.to)
+
+// The one menu item that matches the current page best (longest path; a ?view=
+// item only matches that view), so a parent never lights up with its child.
+function activeTo(pathname, search) {
+  let best = null, score = -1
+  for (const it of ALL_ITEMS) {
+    const [path, query] = it.to.split('?')
+    const hit = path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(path + '/') || (it.also || []).includes(pathname)
+    if (!hit) continue
+    const q = new URLSearchParams(query || '')
+    const cur = new URLSearchParams(search)
+    if (query && [...q].some(([k, v]) => cur.get(k) !== v)) continue
+    if (!query && pathname === path && cur.get('view') && ALL_ITEMS.some((o) => o.to.startsWith(path + '?view=' + encodeURIComponent(cur.get('view')).replace(/%20/g, '+')))) continue
+    const sc = ((it.also || []).includes(pathname) ? pathname.length : path.length) * 2 + (query ? 1 : 0)
+    if (sc > score) { score = sc; best = it.to }
+  }
+  return best
+}
 
 function initials(name) {
   if (!name) return 'U'
@@ -49,7 +87,40 @@ export default function Header() {
     try { return localStorage.getItem('facility_sidebar_collapsed') === '1' } catch { return false }
   })
   const navigate = useNavigate()
+  const location = useLocation()
   const isAdmin = profile?.role === 'Admin'
+  const isReviewer = ['Admin', 'Supervisor'].includes(profile?.role)
+  const current = activeTo(location.pathname, location.search)
+  const [openGroups, setOpenGroups] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('facility_nav_open') || '[]')) } catch { return new Set() }
+  })
+  const [fly, setFly] = useState(null) // collapsed sidebar: { id, top }
+  const flyRef = useRef(null)
+
+  const visible = (item) => (!item.adminOnly || isAdmin) && (!item.reviewerOnly || isReviewer)
+  const groups = GROUPS.map((g) => ({ ...g, items: g.items.filter(visible) })).filter((g) => g.items.length)
+  const currentGroup = groups.find((g) => g.items.some((i) => i.to === current))?.id
+
+  // the group holding the page you are on opens by itself
+  useEffect(() => {
+    if (currentGroup) setOpenGroups((s) => (s.has(currentGroup) ? s : new Set(s).add(currentGroup)))
+  }, [currentGroup])
+  useEffect(() => { setFly(null) }, [location.pathname, location.search])
+  useEffect(() => {
+    try { localStorage.setItem('facility_nav_open', JSON.stringify([...openGroups])) } catch { /* ignore */ }
+  }, [openGroups])
+  useEffect(() => {
+    if (!fly) return
+    const close = (e) => { if (!flyRef.current?.contains(e.target) && !e.target.closest?.('.nav-grp')) setFly(null) }
+    const esc = (e) => { if (e.key === 'Escape') setFly(null) }
+    document.addEventListener('mousedown', close); document.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', esc) }
+  }, [fly])
+  useEffect(() => { if (!collapsed) setFly(null) }, [collapsed])
+
+  function toggleGroup(id) {
+    setOpenGroups((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
 
   useEffect(() => {
     try { localStorage.setItem('facility_sidebar_collapsed', collapsed ? '1' : '0') } catch { /* ignore */ }
@@ -62,34 +133,57 @@ export default function Header() {
     navigate('/login')
   }
 
-  function renderItems(onNavigate) {
-    return sections.map((sec) => {
-      const items = sec.items.filter((item) => (!item.adminOnly || isAdmin) && (!item.reviewerOnly || ['Admin','Supervisor'].includes(profile?.role)))
-      if (!items.length) return null
-      return (
-        <div key={sec.label}>
-          <p className="nav-sec">{sec.label}</p>
-          {items.map((item) => item.href ? (
-            <a key={item.href} href={item.href} className="nav-it" onClick={onNavigate} title={item.label}>
-              <i className={'ti ' + item.icon} aria-hidden="true" />
-              <span className="nav-text">{item.label}</span>
-            </a>
-          ) : (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-              className={({ isActive }) => 'nav-it' + (isActive ? ' active' : '')}
-              onClick={onNavigate}
-              title={item.label}
-            >
-              <i className={'ti ' + item.icon} aria-hidden="true" />
-              <span className="nav-text">{item.label}</span>
-            </NavLink>
-          ))}
-        </div>
-      )
-    })
+  function renderLink(item, onNavigate, sub) {
+    const cls = 'nav-it' + (sub ? ' nav-sub-it' : '')
+    const inner = <><i className={'ti ' + item.icon} aria-hidden="true" /><span className="nav-text">{item.label}</span></>
+    if (item.href) return <a key={item.href} href={item.href} className={cls} onClick={onNavigate} title={item.label}>{inner}</a>
+    const active = item.to === current
+    return (
+      <Link key={item.to} to={item.to} className={cls + (active ? ' active' : '')} aria-current={active ? 'page' : undefined} onClick={onNavigate} title={item.label}>
+        {inner}
+      </Link>
+    )
+  }
+
+  // inSidebar: when the sidebar is collapsed, a group opens as a flyout list
+  function renderItems(onNavigate, inSidebar) {
+    const asFly = inSidebar && collapsed
+    return (
+      <>
+        <p className="nav-sec">Main</p>
+        {TOP.map((item) => renderLink(item, onNavigate))}
+        <p className="nav-sec">Menu</p>
+        {groups.map((g) => {
+          const isOpen = asFly ? fly?.id === g.id : openGroups.has(g.id)
+          const hasActive = g.id === currentGroup
+          return (
+            <div key={g.id} className={'nav-group' + (isOpen ? ' open' : '')}>
+              <button
+                type="button"
+                className={'nav-it nav-grp' + (hasActive && (asFly || !isOpen) ? ' has-active' : '')}
+                aria-expanded={isOpen}
+                title={g.label}
+                onClick={(e) => {
+                  if (asFly) { const r = e.currentTarget.getBoundingClientRect(); setFly(fly?.id === g.id ? null : { id: g.id, top: r.top }) }
+                  else toggleGroup(g.id)
+                }}
+              >
+                <i className={'ti ' + g.icon} aria-hidden="true" />
+                <span className="nav-text">{g.label}</span>
+                <i className="ti ti-chevron-down nav-chev nav-text" aria-hidden="true" />
+              </button>
+              {isOpen && !asFly && <div className="nav-sub">{g.items.map((item) => renderLink(item, onNavigate, true))}</div>}
+              {isOpen && asFly && (
+                <div className="nav-fly" ref={flyRef} style={{ top: Math.min(fly.top, window.innerHeight - 56 - g.items.length * 42) }} role="menu">
+                  <p className="nav-fly-title">{g.label}</p>
+                  {g.items.map((item) => renderLink(item, () => setFly(null), true))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </>
+    )
   }
 
   return (
@@ -160,7 +254,7 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="side-scroll">{renderItems()}</div>
+        <div className="side-scroll">{renderItems(undefined, true)}</div>
 
         <div className="side-foot">
           <button className="nav-it" onClick={handleSignOut} title="Sign out">
