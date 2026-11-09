@@ -161,3 +161,19 @@ progress::-webkit-progress-value{background:#167bd6;border-radius:10px;transitio
 .hist-search-row button{width:auto;margin:0;flex:0 0 auto;padding:0 14px;min-height:44px}
 @media(max-width:1023px){.hist-filters{display:none}.hist-filters.open{display:block}}
 @media(min-width:1024px){.hist-search-row button{display:none}}
+
+/* ---------- menu tree (groups) ---------- */
+.nav-grp .nav-chev{margin-left:auto;font-size:15px;transition:transform .15s}
+.nav-group.open>.nav-grp .nav-chev{transform:rotate(180deg)}
+.nav-grp{font-weight:500}
+.nav-grp.has-active{color:var(--blue)}
+.side-nav .nav-grp.has-active{color:#fff;box-shadow:inset 3px 0 #51bcff}
+.nav-sub{margin:0 0 4px 14px;padding-left:6px;border-left:1px solid var(--border)}
+.side-nav .nav-sub{border-left-color:#2a4c69;margin-left:24px}
+.nav-sub .nav-it{padding-top:8px;padding-bottom:8px}
+.side-nav .nav-sub .nav-it{margin-left:0;margin-right:10px}
+.nav-sub .nav-it i{font-size:16px}
+.nav-fly{position:fixed;left:72px;z-index:60;min-width:210px;padding:6px 0;background:#0f2a40;border:1px solid #2a4c69;border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.35)}
+.side-nav.collapsed .nav-fly .nav-text{display:inline}
+.side-nav.collapsed .nav-fly .nav-it{justify-content:flex-start;padding:9px 12px}
+.nav-fly-title{margin:2px 14px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#93b0c6}
