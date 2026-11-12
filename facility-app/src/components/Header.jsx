@@ -23,6 +23,7 @@ const GROUPS = [
     { to: '/tasks/stages', icon: 'ti-adjustments-horizontal', label: 'Task stages', adminOnly: true },
   ] },
   { id: 'parts', icon: 'ti-package', label: 'Spare Parts', items: [
+    { to: '/parts/dashboard', icon: 'ti-chart-bar', label: 'Dashboard' },
     { to: '/parts', icon: 'ti-list-details', label: 'Parts list' },
     { to: '/parts?view=Low+stock', icon: 'ti-alert-triangle', label: 'Low stock' },
     { to: '/parts/import', icon: 'ti-file-import', label: 'Import parts', adminOnly: true },
