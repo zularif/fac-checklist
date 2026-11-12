@@ -7,6 +7,8 @@ import { loadParts, stockOf, isLow, totalQty, partPath, STORES } from '../../lib
 const NO_CAT = 'Uncategorised'
 const DAYS = 30
 const catOf = (p) => (p.category || '').trim() || NO_CAT
+const PALETTE = ['#2f6f9f', '#e08a1e', '#2a9d6f', '#c2410c', '#7c5cbf', '#0e9aa7', '#c0457a', '#8a8f98']
+const colorOf = (i) => (i < PALETTE.length - 1 ? PALETTE[i] : PALETTE[PALETTE.length - 1])
 const catLink = (c) => `/parts?category=${encodeURIComponent(c)}`
 
 // Spare parts dashboard: stock health, per-category breakdown, what needs
@@ -21,6 +23,7 @@ export default function PartsDashboard() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
+  const [metric, setMetric] = useState('parts')
 
   async function load() {
     try {
@@ -83,7 +86,11 @@ export default function PartsDashboard() {
   }
 
   const needsUpdate = error && (error.code === 'DB_UPDATE' || /no such table|does not exist/i.test(error.message))
-  const max = Math.max(1, ...stats.cats.map((c) => c.parts))
+  const catsByMetric = [...stats.cats].sort((a, b) => b[metric] - a[metric] || a.name.localeCompare(b.name))
+  const sum = catsByMetric.reduce((n, c) => n + c[metric], 0)
+  const max = Math.max(1, ...catsByMetric.map((c) => c[metric]))
+  const R = 52, C = 2 * Math.PI * R
+  let acc = 0
 
   return (
     <div className="screen">
@@ -130,17 +137,46 @@ export default function PartsDashboard() {
           </div>
 
           <div className="work-panel">
-            <h2>By category</h2>
-            {stats.cats.length === 0 ? <p className="page-sub" style={{ margin: 0 }}>No parts yet.</p> : stats.cats.map((c) => (
-              <div key={c.name} className="dash-cat">
-                <div className="dash-cat-head">
-                  <Link to={catLink(c.name)}><b>{c.name}</b></Link>
-                  <span>{c.parts} parts · {c.units} units{c.low > 0 && <span className="pill pill-warn" style={{ marginLeft: 6 }}>{c.low} low</span>}</span>
-                  {isAdmin && <button className="btn-secondary" style={{ width: 'auto', padding: '2px 10px' }} disabled={busy} onClick={() => renameCategory(c.name)} aria-label={`Rename ${c.name}`}><i className="ti ti-pencil" aria-hidden="true" /></button>}
-                </div>
-                <div className="dash-bar"><i style={{ width: `${(c.parts / max) * 100}%` }} /></div>
+            <div className="dash-cat-title">
+              <h2 style={{ margin: 0 }}>By category</h2>
+              <div className="chip-row" style={{ margin: 0 }}>
+                {[['parts', 'Parts'], ['units', 'Units in stock']].map(([k, l]) => (
+                  <button key={k} className={metric === k ? 'chip active' : 'chip'} aria-pressed={metric === k} onClick={() => setMetric(k)}>{l}</button>
+                ))}
               </div>
-            ))}
+            </div>
+            {catsByMetric.length === 0 ? <p className="page-sub" style={{ margin: 0 }}>No parts yet.</p> : sum === 0 ? (
+              <p className="page-sub" style={{ margin: '10px 0 0' }}>No stock recorded yet. Receive stock to see units per category.</p>
+            ) : (
+              <div className="dash-cat-grid">
+                <svg viewBox="0 0 140 140" className="dash-donut" role="img" aria-label={`${metric} by category`}>
+                  <g transform="rotate(-90 70 70)">
+                    {catsByMetric.filter((c) => c[metric] > 0).map((c) => {
+                      const i = catsByMetric.indexOf(c)
+                      const len = (c[metric] / sum) * C
+                      const el = <circle key={c.name} cx="70" cy="70" r={R} fill="none" stroke={colorOf(i)} strokeWidth="22" strokeDasharray={`${Math.max(len - 1.5, 0.5)} ${C}`} strokeDashoffset={-acc}><title>{`${c.name}: ${c[metric]} (${Math.round((c[metric] / sum) * 100)}%)`}</title></circle>
+                      acc += len
+                      return el
+                    })}
+                  </g>
+                  <text x="70" y="68" textAnchor="middle" className="dash-donut-num">{sum}</text>
+                  <text x="70" y="85" textAnchor="middle" className="dash-donut-lbl">{metric === 'parts' ? 'parts' : 'units'}</text>
+                </svg>
+                <div className="dash-cat-list">
+                  {catsByMetric.map((c, i) => (
+                    <div key={c.name} className="dash-cat">
+                      <div className="dash-cat-head">
+                        <span className="dash-dot" style={{ background: colorOf(i) }} />
+                        <Link to={catLink(c.name)}><b>{c.name}</b></Link>
+                        <span className="dash-cat-nums">{c.parts} parts · {c.units} units{c.low > 0 && <span className="pill pill-warn" style={{ marginLeft: 6 }}>{c.low} low</span>}</span>
+                        {isAdmin && <button className="btn-secondary dash-edit" disabled={busy} onClick={() => renameCategory(c.name)} aria-label={`Rename ${c.name}`}><i className="ti ti-pencil" aria-hidden="true" /></button>}
+                      </div>
+                      <div className="dash-bar"><i style={{ width: `${(c[metric] / max) * 100}%`, background: colorOf(i) }} /></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="work-panel">
