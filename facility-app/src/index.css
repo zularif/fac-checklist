@@ -1080,3 +1080,12 @@ h1 { font-size: 22px; font-weight: 500; }
 .photo-match-state.busy { color: var(--blue); }
 .photo-match-state.skip { color: var(--text-secondary); }
 @media (max-width: 600px) { .photo-match { grid-template-columns: 1fr 1fr; } .photo-match-state { grid-column: 1 / -1; text-align: left; } }
+
+/* Spare parts dashboard */
+.dash-tile { padding: 18px; border: 1px solid var(--work-line, #d8e2ea); background: white; border-radius: 14px; display: flex; flex-direction: column; text-decoration: none; color: inherit; }
+.dash-tile strong { font-size: 30px; }
+.dash-tile span { font-size: 14px; color: #546d80; }
+.dash-cat { margin-bottom: 12px; }
+.dash-cat-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; font-size: 14px; }
+.dash-bar { height: 8px; background: #e8eef3; border-radius: 4px; margin-top: 4px; overflow: hidden; }
+.dash-bar i { display: block; height: 100%; background: #2f6f9f; border-radius: 4px; }
