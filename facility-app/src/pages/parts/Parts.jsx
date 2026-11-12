@@ -13,7 +13,7 @@ export default function Parts() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('All')
+  const [category, setCategory] = useState(params.get('category') || 'All')
   const view = VIEWS.includes(params.get('view')) ? params.get('view') : 'All'
 
   useEffect(() => {
@@ -50,6 +50,9 @@ export default function Parts() {
             {lowCount > 0 && <span className="pill pill-warn" style={{ marginLeft: 6 }}>{lowCount} low stock</span>}
           </p>
         </div>
+        <div className="parts-admin-actions">
+          <button className="btn-secondary" onClick={() => navigate('/parts/dashboard')}><i className="ti ti-chart-bar" aria-hidden="true" />Dashboard</button>
+        </div>
         {isAdmin && (
           <div className="parts-admin-actions">
             <button className="btn-primary" onClick={() => navigate('/parts/new')}><i className="ti ti-plus" aria-hidden="true" />Add part</button>
@@ -73,7 +76,7 @@ export default function Parts() {
 
       <div className="hist-search-row" style={{ marginTop: 10 }}>
         <input placeholder="Search code, name, brand, model" value={search} onChange={(e) => setSearch(e.target.value)} />
-        {categories.length > 2 && (
+        {categories.length > 1 && (
           <select value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Category" style={{ width: 'auto', maxWidth: 170, margin: 0 }}>
             {categories.map((c) => <option key={c} value={c}>{c === 'All' ? 'All categories' : c}</option>)}
           </select>

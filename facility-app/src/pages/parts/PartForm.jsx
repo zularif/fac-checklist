@@ -19,6 +19,7 @@ export default function PartForm() {
   const [photo, setPhoto] = useState(null) // { blob, preview, bytes, originalBytes }
   const [compressing, setCompressing] = useState(false)
   const [categories, setCategories] = useState([])
+  const [newCat, setNewCat] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -95,8 +96,15 @@ export default function PartForm() {
             <label className="work-field">Part code *<input value={form.part_code} onChange={(e) => set('part_code', e.target.value)} placeholder="e.g. BRG-6204" required /></label>
             <label className="work-field">Part name *<input value={form.part_name} onChange={(e) => set('part_name', e.target.value)} placeholder="e.g. Bearing 6204-2RS" required /></label>
             <label className="work-field">Category
-              <input list="part-categories" value={form.category} onChange={(e) => set('category', e.target.value)} placeholder="e.g. Mechanical" />
-              <datalist id="part-categories">{categories.map((c) => <option key={c} value={c} />)}</datalist>
+              {newCat ? (
+                <input autoFocus value={form.category} onChange={(e) => set('category', e.target.value)} placeholder="New category name" onBlur={() => { if (!form.category.trim() && categories.length) setNewCat(false) }} />
+              ) : (
+                <select value={form.category} onChange={(e) => { if (e.target.value === '__new') { set('category', ''); setNewCat(true) } else set('category', e.target.value) }}>
+                  <option value="">— none —</option>
+                  {[...new Set([...categories, form.category].filter(Boolean))].sort().map((c) => <option key={c} value={c}>{c}</option>)}
+                  <option value="__new">+ Add new category…</option>
+                </select>
+              )}
             </label>
             <label className="work-field">Unit<input value={form.unit} onChange={(e) => set('unit', e.target.value)} placeholder="pcs, m, set, L" /></label>
             <label className="work-field">Brand<input value={form.brand} onChange={(e) => set('brand', e.target.value)} /></label>
