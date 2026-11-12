@@ -1086,6 +1086,15 @@ h1 { font-size: 22px; font-weight: 500; }
 .dash-tile strong { font-size: 30px; }
 .dash-tile span { font-size: 14px; color: #546d80; }
 .dash-cat { margin-bottom: 12px; }
-.dash-cat-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; font-size: 14px; }
+.dash-cat-head { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.dash-cat-nums { margin-left: auto; color: #546d80; text-align: right; }
+.dash-dot { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.dash-edit { width: auto; padding: 2px 10px; }
+.dash-cat-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.dash-cat-grid { display: grid; gap: 18px; align-items: center; }
+@media (min-width: 720px) { .dash-cat-grid { grid-template-columns: 200px 1fr; } }
+.dash-donut { width: 100%; max-width: 200px; margin: 0 auto; }
+.dash-donut-num { font-size: 26px; font-weight: 700; fill: currentColor; }
+.dash-donut-lbl { font-size: 10px; fill: #546d80; }
 .dash-bar { height: 8px; background: #e8eef3; border-radius: 4px; margin-top: 4px; overflow: hidden; }
-.dash-bar i { display: block; height: 100%; background: #2f6f9f; border-radius: 4px; }
+.dash-bar i { display: block; height: 100%; border-radius: 4px; }
