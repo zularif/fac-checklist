@@ -5,6 +5,16 @@ import { localDelete } from './localStore'
 
 export const STORES = ['P1', 'P2']
 
+// One fixed colour per category (same on the dashboard and the printed labels).
+// Colours follow the alphabetical order of the category names, so they stay
+// stable when stock changes. Dark enough for white text.
+export const CATEGORY_COLORS = ['#2f6f9f', '#d97706', '#15803d', '#c2410c', '#7c3aed', '#0e7490', '#be185d', '#4d7c0f']
+export const categoryColor = (name, parts) => {
+  const names = [...new Set((parts || []).map((p) => (p.category || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
+  const i = names.indexOf((name || '').trim())
+  return i < 0 ? '#64748b' : CATEGORY_COLORS[i % CATEGORY_COLORS.length]
+}
+
 export const partPath = (code) => `/parts/${encodeURIComponent(code)}`
 // The QR on each label holds the full web address, so a phone camera opens the
 // part straight away and the in-app scanner understands it too.
