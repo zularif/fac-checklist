@@ -2,13 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { db } from '../../lib/db'
 import { useIsAdmin } from '../../lib/useIsAdmin'
-import { loadParts, stockOf, isLow, totalQty, partPath, STORES } from '../../lib/parts'
+import { loadParts, stockOf, isLow, totalQty, partPath, STORES, categoryColor } from '../../lib/parts'
 
 const NO_CAT = 'Uncategorised'
 const DAYS = 30
 const catOf = (p) => (p.category || '').trim() || NO_CAT
-const PALETTE = ['#2f6f9f', '#e08a1e', '#2a9d6f', '#c2410c', '#7c5cbf', '#0e9aa7', '#c0457a', '#8a8f98']
-const colorOf = (i) => (i < PALETTE.length - 1 ? PALETTE[i] : PALETTE[PALETTE.length - 1])
 const catLink = (c) => `/parts?category=${encodeURIComponent(c)}`
 
 // Spare parts dashboard: stock health, per-category breakdown, what needs
@@ -89,6 +87,7 @@ export default function PartsDashboard() {
   const catsByMetric = [...stats.cats].sort((a, b) => b[metric] - a[metric] || a.name.localeCompare(b.name))
   const sum = catsByMetric.reduce((n, c) => n + c[metric], 0)
   const max = Math.max(1, ...catsByMetric.map((c) => c[metric]))
+  const colorOf = (i) => categoryColor(catsByMetric[i].name, parts)
   const R = 52, C = 2 * Math.PI * R
   let acc = 0
 

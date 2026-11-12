@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
-import { loadParts, stockOf, photoUrl, partQrValue } from '../../lib/parts'
+import { loadParts, stockOf, photoUrl, partQrValue, categoryColor } from '../../lib/parts'
 
 const SIZES = {
   'Standard (6.3 × 3.8 cm, 3 across A4)': { w: 6.3, h: 3.8 },
@@ -76,17 +76,20 @@ export default function PartLabels() {
         {toPrint.map((p) => {
           const locs = ['P1', 'P2'].filter((st) => showStore === 'both' || showStore === st).map((st) => ({ st, loc: stockOf(p, st).location })).filter((x) => x.loc)
           return (
-            <div className="part-label" key={p.id}>
-              <div className="pl-photo">{p.photo_path ? <img src={photoUrl(p.photo_path)} alt="" /> : <span>No photo</span>}</div>
-              <div className="pl-text">
-                <p className="pl-name">{p.part_name}</p>
-                <p className="pl-code">{p.part_code}</p>
-                <p className="pl-detail">{[p.category, p.brand, p.model].filter(Boolean).join(' · ')}</p>
-                {p.description && <p className="pl-detail pl-desc">{p.description}</p>}
-                <p className="pl-detail">Unit: {p.unit}</p>
-                {locs.map((x) => <p className="pl-detail pl-loc" key={x.st}><b>{x.st}</b> {x.loc}</p>)}
+            <div className="part-label" key={p.id} style={{ '--pc': categoryColor(p.category, parts) }}>
+              <div className="pl-head"><span>{p.category || 'Spare part'}</span></div>
+              <div className="pl-body">
+                <div className="pl-photo">{p.photo_path ? <img src={photoUrl(p.photo_path)} alt="" /> : <span>No photo</span>}</div>
+                <div className="pl-text">
+                  <p className="pl-name">{p.part_name}</p>
+                  <p className="pl-code">{p.part_code}</p>
+                  {[p.brand, p.model].filter(Boolean).length > 0 && <p className="pl-detail">{[p.brand, p.model].filter(Boolean).join(' · ')}</p>}
+                  {p.description && <p className="pl-detail pl-desc">{p.description}</p>}
+                  <p className="pl-detail">Unit: {p.unit}</p>
+                  {locs.map((x) => <p className="pl-detail pl-loc" key={x.st}><b>{x.st}</b> {x.loc}</p>)}
+                </div>
+                <div className="pl-qr"><QRCodeSVG value={partQrValue(p.part_code)} size={220} level="M" /><span className="pl-scan">SCAN</span></div>
               </div>
-              <div className="pl-qr"><QRCodeSVG value={partQrValue(p.part_code)} size={220} level="M" /><span>SCAN</span></div>
             </div>
           )
         })}
