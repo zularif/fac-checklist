@@ -74,7 +74,7 @@ export async function submitPermit(env, request) {
   }
   if (!CATEGORIES.includes(rec.work_category)) throw apiError('Invalid work category.', 'P0001', 400)
   if (!LOCATIONS.includes(rec.work_location)) throw apiError('Invalid work location.', 'P0001', 400)
-  if (!['New', 'Renewal', 'Extension', 'Revision'].includes(rec.request_type)) throw apiError('Invalid request type.', 'P0001', 400)
+  if (!['New', 'Renewal'].includes(rec.request_type)) throw apiError('Invalid request type.', 'P0001', 400)
   if (!['P1', 'P2'].includes(rec.plant)) throw apiError('Invalid plant.', 'P0001', 400)
   if (rec.target_date < rec.start_date) throw apiError('Completion date cannot be before the start date.', 'P0001', 400)
   const workers = Number(p.totalWorkers)
