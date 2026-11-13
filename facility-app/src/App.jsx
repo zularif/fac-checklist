@@ -30,6 +30,7 @@ const History = lazy(() => import('./pages/History'))
 const Setup = lazy(() => import('./pages/Setup'))
 const Parts = lazy(() => import('./pages/parts/Parts'))
 const PartsDashboard = lazy(() => import('./pages/parts/PartsDashboard'))
+const PartsCount = lazy(() => import('./pages/parts/PartsCount'))
 const PartDetail = lazy(() => import('./pages/parts/PartDetail'))
 const PartForm = lazy(() => import('./pages/parts/PartForm'))
 const PartsImport = lazy(() => import('./pages/parts/PartsImport'))
@@ -104,6 +105,7 @@ export default function App() {
           <Route path="/admin/checklist/:equipId" element={<Protected><Suspense fallback={<LazyFallback />}><ChecklistManager /></Suspense></Protected>} />
           <Route path="/parts" element={<Protected><Suspense fallback={<LazyFallback />}><Parts /></Suspense></Protected>} />
           <Route path="/parts/dashboard" element={<Protected><Suspense fallback={<LazyFallback />}><PartsDashboard /></Suspense></Protected>} />
+          <Route path="/parts/count" element={<Protected><Suspense fallback={<LazyFallback />}><PartsCount /></Suspense></Protected>} />
           <Route path="/parts/new" element={<Protected><Suspense fallback={<LazyFallback />}><PartForm /></Suspense></Protected>} />
           <Route path="/parts/import" element={<Protected><Suspense fallback={<LazyFallback />}><PartsImport /></Suspense></Protected>} />
           <Route path="/parts/photos" element={<Protected><Suspense fallback={<LazyFallback />}><PartPhotosImport /></Suspense></Protected>} />

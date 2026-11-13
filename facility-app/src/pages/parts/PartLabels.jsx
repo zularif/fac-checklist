@@ -30,6 +30,9 @@ export default function PartLabels() {
   const dims = SIZES[size]
 
   const toggle = (id) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const catIds = (c) => parts.filter((p) => (p.category || '') === c).map((p) => p.id)
+  const catAllOn = (c) => catIds(c).length > 0 && catIds(c).every((id) => selected.has(id))
+  const toggleCat = (c) => setSelected((s) => { const n = new Set(s); const on = catAllOn(c); catIds(c).forEach((id) => (on ? n.delete(id) : n.add(id))); return n })
   const allOn = filtered.length > 0 && filtered.every((p) => selected.has(p.id))
   const toggleAll = () => setSelected((s) => { const n = new Set(s); filtered.forEach((p) => (allOn ? n.delete(p.id) : n.add(p.id))); return n })
 
@@ -48,8 +51,20 @@ export default function PartLabels() {
         </div>
         <div className="hist-search-row">
           <input placeholder="Search code or name" value={search} onChange={(e) => setSearch(e.target.value)} />
-          {categories.length > 2 && <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: 'auto', margin: 0 }}>{categories.map((c) => <option key={c} value={c}>{c === 'All' ? 'All categories' : c}</option>)}</select>}
+          {categories.length > 1 && <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: 'auto', margin: 0 }}>{categories.map((c) => <option key={c} value={c}>{c === 'All' ? 'All categories' : c}</option>)}</select>}
         </div>
+        {categories.length > 1 && (
+          <>
+            <p className="section-label" style={{ margin: '4px 0 6px' }}>Select a whole category</p>
+            <div className="chip-row">
+              {categories.filter((c) => c !== 'All').map((c) => (
+                <button key={c} type="button" className={catAllOn(c) ? 'chip active' : 'chip'} aria-pressed={catAllOn(c)} onClick={() => toggleCat(c)}>
+                  <span style={{ display: 'inline-block', width: 10, height: 10, background: categoryColor(c, parts), marginRight: 6 }} />{c} ({catIds(c).length})
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0 10px' }}>
           <input type="checkbox" style={{ width: 'auto' }} checked={allOn} onChange={toggleAll} />Select all shown — {selected.size} selected
         </label>

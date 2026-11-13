@@ -26,6 +26,7 @@ const GROUPS = [
     { to: '/parts/dashboard', icon: 'ti-chart-bar', label: 'Dashboard' },
     { to: '/parts', icon: 'ti-list-details', label: 'Parts list' },
     { to: '/parts?view=Low+stock', icon: 'ti-alert-triangle', label: 'Low stock' },
+    { to: '/parts/count', icon: 'ti-clipboard-check', label: 'Stock count', adminOnly: true },
     { to: '/parts/import', icon: 'ti-file-import', label: 'Import parts', adminOnly: true },
     { to: '/parts/photos', icon: 'ti-photo-plus', label: 'Import photos', adminOnly: true },
     { to: '/parts/labels', icon: 'ti-qrcode', label: 'QR labels', adminOnly: true },

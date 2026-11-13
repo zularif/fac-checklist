@@ -56,6 +56,7 @@ export default function Parts() {
         {isAdmin && (
           <div className="parts-admin-actions">
             <button className="btn-primary" onClick={() => navigate('/parts/new')}><i className="ti ti-plus" aria-hidden="true" />Add part</button>
+            <button className="btn-secondary" onClick={() => navigate('/parts/count')}><i className="ti ti-clipboard-check" aria-hidden="true" />Count</button>
             <button className="btn-secondary" onClick={() => navigate('/parts/import')}><i className="ti ti-file-import" aria-hidden="true" />Import</button>
             <button className="btn-secondary" onClick={() => navigate('/parts/photos')}><i className="ti ti-photo-plus" aria-hidden="true" />Photos</button>
             <button className="btn-secondary" onClick={() => navigate('/parts/labels')}><i className="ti ti-qrcode" aria-hidden="true" />QR labels</button>
