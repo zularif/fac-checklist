@@ -91,7 +91,7 @@ button{font:inherit;cursor:pointer}
 <header class="top">
   <h1>Vendor Work Permit Application</h1>
   <p>Facility Management &middot; Documents are compressed and stored securely in the company system</p>
-  <p style="margin-top:6px"><a href="/" style="color:#fca311;font-size:12.5px">&larr; Back to Facility Maintenance app</a></p>
+  <p id="staffBack" style="margin-top:6px;display:none"><a href="/" style="color:#fca311;font-size:12.5px">&larr; Back to Facility Maintenance app</a></p>
 </header>
 
 <main>
@@ -226,6 +226,9 @@ const $ = id => document.getElementById(id);
 
 
 const big = ()=> (parseInt($("workers").value,10)||0) >= 5;
+
+/* ---- staff-only link back to the app (hidden for vendors, who are not signed in) ---- */
+try{ const ss=JSON.parse(localStorage.getItem("facility-session")||"null"); if(ss&&ss.access_token) $("staffBack").style.display="block"; }catch(e){}
 
 /* ---- upload cards ---- */
 const fileId = f => f.name+"|"+f.size;
