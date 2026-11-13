@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { db } from '../lib/db'
 import { useIsAdmin } from '../lib/useIsAdmin'
+import { buildPermitPdf, buildPermitZip, safe } from '../lib/permitPdf'
 
 // Vendor work permit applications submitted from /vendor-permit.html.
 // Staff can read them, download the uploaded documents and set a status.
@@ -8,22 +9,28 @@ const STATUSES = ['New', 'Reviewing', 'Approved', 'Rejected', 'Closed']
 const kb = (n) => (n >= 1048576 ? (n / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB')
 const when = (s) => (s ? new Date(s).toLocaleString('en-MY', { dateStyle: 'medium', timeStyle: 'short' }) : '')
 
-async function downloadFile(file) {
+async function fetchFileBlob(file) {
   const { data: { session } } = await db.auth.getSession()
   const res = await fetch('/files/permits/' + file.key.split('/').map(encodeURIComponent).join('/'), { headers: { Authorization: `Bearer ${session?.access_token}` } })
-  if (!res.ok) throw new Error(res.status === 404 ? 'File not found.' : `Could not download (${res.status}).`)
+  if (!res.ok) throw new Error(res.status === 404 ? `${file.label}: file not found.` : `Could not download ${file.label} (${res.status}).`)
   let blob = await res.blob()
   // The browser normally unzips automatically; this is a fallback if it did not.
   if (file.encoding === 'gzip' && typeof DecompressionStream !== 'undefined') {
     const head = new Uint8Array(await blob.slice(0, 2).arrayBuffer())
     if (head[0] === 0x1f && head[1] === 0x8b) blob = await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).blob()
   }
-  const url = URL.createObjectURL(new Blob([blob], { type: file.type || 'application/octet-stream' }))
+  return new Blob([blob], { type: file.type || 'application/octet-stream' })
+}
+
+function saveBlob(blob, name) {
+  const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  a.href = url; a.download = file.name
+  a.href = url; a.download = name
   document.body.appendChild(a); a.click(); a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 5000)
 }
+const fetchBlobSafe = fetchFileBlob
+const downloadFile = async (file) => saveBlob(await fetchFileBlob(file), file.name)
 
 function Row({ label, value }) {
   if (!value) return null
@@ -72,6 +79,20 @@ export default function Permits() {
     setMsg('')
     try { await downloadFile(f) } catch (e) { setMsg(e.message) }
   }
+  async function getPdf(r) {
+    setBusy(true); setMsg('')
+    try { saveBlob(await buildPermitPdf(r), `${safe(r.ref)}_Application.pdf`) } catch (e) { setMsg('Could not create the PDF: ' + e.message) }
+    setBusy(false)
+  }
+  async function getZip(r) {
+    setBusy(true); setMsg('')
+    try {
+      const blob = await buildPermitZip(r, fetchBlobSafe, (i, n) => setMsg(`Adding document ${i} of ${n}…`))
+      saveBlob(blob, `${safe(r.ref)}_${safe(r.requestor_company)}.zip`)
+      setMsg('')
+    } catch (e) { setMsg('Could not create the ZIP: ' + e.message) }
+    setBusy(false)
+  }
 
   const link = `${location.origin}/vendor-permit.html`
 
@@ -117,6 +138,14 @@ export default function Permits() {
                     <Row label="Chemicals" value={(d.chemicals || []).map((x) => `${x.name} (${x.qty})`).join(', ')} />
                     <Row label="Maincon safety" value={d.mainconSafety?.name ? `${d.mainconSafety.name} · ${d.mainconSafety.company} · DOSH ${d.mainconSafety.dosh}` : ''} />
                     <Row label="Sub-contractors" value={(d.subcontractors || []).map((x) => `${x.company} / ${x.safetyName} / DOSH ${x.dosh}`).join('; ')} />
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0 4px' }}>
+                      <button type="button" className="btn-primary" style={{ width: 'auto', padding: '8px 14px' }} disabled={busy} onClick={() => getZip(r)}>
+                        <i className="ti ti-file-zip" aria-hidden="true" />Download ZIP (application PDF + documents)
+                      </button>
+                      <button type="button" className="btn-secondary" style={{ width: 'auto', padding: '8px 14px' }} disabled={busy} onClick={() => getPdf(r)}>
+                        <i className="ti ti-file-type-pdf" aria-hidden="true" />Application PDF only
+                      </button>
+                    </div>
                     <p style={{ margin: '10px 0 4px', fontWeight: 700, fontSize: 13 }}>Documents</p>
                     {(r.files || []).map((f) => (
                       <button key={f.key} type="button" className="btn-secondary" style={{ width: 'auto', padding: '6px 12px', margin: '0 6px 6px 0' }} onClick={() => get(f)}>

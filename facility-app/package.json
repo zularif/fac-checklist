@@ -18,6 +18,9 @@
   },
   "dependencies": {
     "html5-qrcode": "^2.3.8",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.9",
+    "jszip": "^3.10.2",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
