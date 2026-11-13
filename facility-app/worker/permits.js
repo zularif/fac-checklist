@@ -19,6 +19,19 @@ const MAX_PER_HOUR = 10                // applications per network address per h
 
 const text = (v, max = 300) => String(v ?? '').trim().slice(0, max)
 const req = (v, label, max) => { const t = text(v, max); if (!t) throw apiError(`${label} is required.`, 'P0001', 400); return t }
+// Documents go to the R2 bucket (binding PERMITS) when it is connected; otherwise to the FILES KV store.
+export const putDoc = (env, key, buf, meta) => env.PERMITS
+  ? env.PERMITS.put(key, buf, { httpMetadata: { contentType: meta.contentType }, customMetadata: { encoding: meta.encoding || '', originalName: meta.originalName || '' } })
+  : env.FILES.put(key, buf, { metadata: meta })
+export const deleteDoc = (env, key) => (env.PERMITS ? env.PERMITS.delete(key) : env.FILES.delete(key))
+export async function getDoc(env, key) {
+  if (env.PERMITS) {
+    const o = await env.PERMITS.get(key)
+    if (o) return { body: o.body, contentType: o.httpMetadata?.contentType, encoding: o.customMetadata?.encoding }
+  }
+  const { value, metadata } = await env.FILES.getWithMetadata(key, 'arrayBuffer')
+  return value === null ? null : { body: value, contentType: metadata?.contentType, encoding: metadata?.encoding }
+}
 const safeName = (s) => String(s).replace(/[^A-Za-z0-9._ -]/g, '_').replace(/\.{2,}/g, '.').slice(0, 80) || 'file'
 
 async function ipHash(request, env) {
@@ -34,7 +47,7 @@ const newRef = () => {
 const list = (a, keys) => (Array.isArray(a) ? a.slice(0, 50).map((o) => Object.fromEntries(keys.map((k) => [k, text(o?.[k], 200)]))).filter((o) => Object.values(o).some(Boolean)) : [])
 
 export async function submitPermit(env, request) {
-  if (!env.DB || !env.FILES) throw apiError('Server is not set up.', 'CONFIG', 500)
+  if (!env.DB || !(env.PERMITS || env.FILES)) throw apiError('Server is not set up.', 'CONFIG', 500)
   let form
   try { form = await request.formData() } catch { throw apiError('Invalid submission.', 'P0001', 400) }
   if (text(form.get('website'))) return { ok: true, ref: 'VWP-OK' } // hidden spam-trap field: pretend success
@@ -96,7 +109,7 @@ export async function submitPermit(env, request) {
   try {
     for (const [doc, v] of Object.entries(incoming)) {
       const key = `permits/${id}/${doc}-${v.origName}`
-      await env.FILES.put(key, await v.f.arrayBuffer(), { metadata: { contentType: v.type, encoding: v.encoding, originalName: v.origName, uploadedAt: new Date().toISOString() } })
+      await putDoc(env, key, await v.f.arrayBuffer(), { contentType: v.type, encoding: v.encoding, originalName: v.origName, uploadedAt: new Date().toISOString() })
       written.push(key)
       files.push({ doc, label: DOC_TYPES[doc], name: v.origName, key: `${id}/${doc}-${v.origName}`, size: v.f.size, origSize: v.origSize, encoding: v.encoding, type: v.type })
     }
@@ -111,7 +124,7 @@ export async function submitPermit(env, request) {
       }
     }
   } catch (e) {
-    for (const k of written) await env.FILES.delete(k).catch(() => {})
+    for (const k of written) await deleteDoc(env, k).catch(() => {})
     throw e.status ? e : apiError('Could not save the application. Please try again.', 'DB', 500)
   }
   return { ok: true, ref }
@@ -132,7 +145,7 @@ async function permit_delete(ctx, body) {
   if (!row) throw apiError('Application not found.', 'P0001', 404)
   let files = []
   try { files = JSON.parse(row.files || '[]') } catch { /* none */ }
-  for (const f of files) await ctx.env.FILES.delete('permits/' + f.key)
+  for (const f of files) await deleteDoc(ctx.env, 'permits/' + f.key)
   await ctx.db.prepare('DELETE FROM permits WHERE id = ?').bind(id).run()
   return { ok: true }
 }

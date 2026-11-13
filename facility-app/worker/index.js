@@ -10,7 +10,7 @@
 //   GET  /files/:bucket/*        read a file
 //   POST /api/public/permit      vendor work permit application (no sign-in)
 //
-// Bindings (wrangler.jsonc): DB (D1), FILES (KV), ASSETS (static files)
+// Bindings (wrangler.jsonc): DB (D1), FILES (KV), PERMITS (R2, vendor permit documents), ASSETS (static files)
 // Secrets: JWT_SECRET, PIN_PEPPER, SETUP_KEY (first-time setup at /setup)
 
 import { apiError } from './schema.js'
@@ -19,7 +19,7 @@ import { authenticate, loginWithPin, loginWithPassword, signToken } from './auth
 import { RPC as CORE_RPC, FUNCTIONS } from './rpc.js'
 import { runSetup, adminDbUpdate } from './setup.js'
 import { INVENTORY_RPC } from './inventory.js'
-import { PERMIT_RPC, submitPermit } from './permits.js'
+import { PERMIT_RPC, submitPermit, getDoc } from './permits.js'
 
 const RPC = { ...CORE_RPC, ...INVENTORY_RPC, ...PERMIT_RPC }
 
@@ -118,8 +118,15 @@ async function handleFile(request, env, url) {
     const auth = await authenticate(env, request)
     if (!auth.actor) return new Response('Sign in required', { status: 401 })
   }
-  const { value, metadata } = await env.FILES.getWithMetadata(key, 'arrayBuffer')
-  if (value === null) return new Response('Not found', { status: 404 })
+  let value, metadata
+  if (m[1] === 'permits') {
+    const doc = await getDoc(env, key)
+    if (!doc) return new Response('Not found', { status: 404 })
+    value = doc.body; metadata = { contentType: doc.contentType, encoding: doc.encoding }
+  } else {
+    ;({ value, metadata } = await env.FILES.getWithMetadata(key, 'arrayBuffer'))
+    if (value === null) return new Response('Not found', { status: 404 })
+  }
   return new Response(value, {
     headers: {
       'Content-Type': metadata?.contentType || 'application/octet-stream',
