@@ -93,6 +93,8 @@ button{font:inherit;cursor:pointer}
   <div class="field c6"><label class="l" for="reqPos">Requestor Position <span class="req">*</span></label><input type="text" id="reqPos" data-req><div class="msg">Please enter the position.</div></div>
   <div class="field c6"><label class="l" for="reqCo">Requestor Company <span class="req">*</span></label><input type="text" id="reqCo" data-req autocomplete="organization"><div class="msg">Please enter the company.</div></div>
   <div class="field c6"><label class="l" for="reqTel">Requestor Contact No. <span class="req">*</span></label><input type="tel" id="reqTel" data-req data-tel placeholder="e.g. 012-3456789" autocomplete="tel"><div class="msg">Enter a valid phone number (8-15 digits).</div></div>
+  <div class="field c6"><label class="l" for="hostName">Host Name <span class="req">*</span></label><input type="text" id="hostName" data-req placeholder="Wiwynn person hosting this work"><div class="msg">Please enter the host name.</div></div>
+  <div class="field c6"><label class="l" for="hostEmail">Host Email <span class="req">*</span></label><input type="text" id="hostEmail" data-req data-email inputmode="email" autocomplete="off" placeholder="name@wiwynn.com"><div class="msg">Enter a valid email address.</div></div>
 </div></div></section>
 
 <!-- PART C -->
@@ -263,6 +265,7 @@ function validate(){
   document.querySelectorAll("[data-req]").forEach(i=>{
     const f=i.closest(".field"); let isBad=!i.value.trim();
     if(!isBad && i.dataset.tel) isBad = !/^[+()\-\s\d]{8,18}$/.test(i.value) || i.value.replace(/\D/g,"").length<8;
+    if(!isBad && i.dataset.email) isBad = !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(i.value.trim());
     if(!isBad && i.id==="workers") isBad = !(parseInt(i.value,10)>=1);
     if(mark(f,isBad)) bad.push(f);
   });
@@ -325,6 +328,7 @@ $("f").addEventListener("submit",async e=>{
   $("status").style.color="var(--navy)";
   const btn=$("submitBtn"); btn.disabled=true;
   const data={
+    host:{name:$("hostName").value.trim(),email:$("hostEmail").value.trim()},
     requestor:{name:$("reqName").value.trim(),position:$("reqPos").value.trim(),company:$("reqCo").value.trim(),contact:$("reqTel").value.trim()},
     project:{requestType:$("reqType").value,plant:$("plant").value,po:$("po").value.trim(),title:$("title").value.trim(),description:$("desc").value.trim(),
       totalWorkers:parseInt($("workers").value,10),startDate:$("start").value,targetCompletion:$("end").value,category:$("cat").value.trim(),location:$("loc").value.trim(),

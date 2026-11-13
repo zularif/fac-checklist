@@ -59,7 +59,7 @@ export default function Permits() {
   const shown = useMemo(() => {
     const q = search.trim().toLowerCase()
     return rows.filter((r) => (filter === 'All' || r.status === filter) &&
-      (!q || [r.ref, r.title, r.requestor_company, r.requestor_name, r.plant].some((v) => String(v || '').toLowerCase().includes(q))))
+      (!q || [r.ref, r.title, r.requestor_company, r.requestor_name, r.plant, r.data?.host?.name, r.data?.host?.email].some((v) => String(v || '').toLowerCase().includes(q))))
   }, [rows, filter, search])
 
   async function setStatus(r, status) {
@@ -128,6 +128,7 @@ export default function Permits() {
                 {isOpen && (
                   <div style={{ marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
                     <Row label="Requestor" value={`${r.requestor_name} (${r.requestor_position}) · ${r.requestor_contact}`} />
+                    <Row label="Host" value={d.host?.name ? `${d.host.name} · ${d.host.email}` : ''} />
                     <Row label="Work" value={r.description} />
                     <Row label="Dates" value={`${r.start_date} to ${r.target_date}`} />
                     <Row label="Category / location" value={[r.work_category, r.work_location].filter(Boolean).join(' / ')} />

@@ -58,7 +58,9 @@ export async function submitPermit(env, request) {
   const recent = await env.DB.prepare("SELECT COUNT(*) AS n FROM permits WHERE ip_hash = ? AND created_at > strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 hour')").bind(hash).first()
   if ((recent?.n || 0) >= MAX_PER_HOUR) throw apiError('Too many applications from this network. Please try again later.', 'RATE', 429)
 
-  const r = d.requestor || {}, p = d.project || {}, mc = d.mainconSafety || {}
+  const r = d.requestor || {}, p = d.project || {}, mc = d.mainconSafety || {}, h = d.host || {}
+  const host = { name: req(h.name, 'Host name', 100), email: req(h.email, 'Host email', 120).toLowerCase() }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(host.email)) throw apiError('Enter a valid host email address.', 'P0001', 400)
   const rec = {
     requestor_name: req(r.name, 'Requestor name', 100), requestor_position: req(r.position, 'Requestor position', 100),
     requestor_company: req(r.company, 'Requestor company', 150), requestor_contact: req(r.contact, 'Requestor contact no.', 30),
@@ -95,6 +97,7 @@ export async function submitPermit(env, request) {
   for (const k of needed) if (!incoming[k]) throw apiError(`${DOC_TYPES[k]} is required.`, 'P0001', 400)
 
   const data = {
+    host,
     requestor: { name: rec.requestor_name, position: rec.requestor_position, company: rec.requestor_company, contact: rec.requestor_contact },
     project: { ...rec, permits, totalWorkers: workers },
     machines: list(d.machines, ['name', 'qty']), equipment: list(d.equipment, ['name', 'qty']), chemicals: list(d.chemicals, ['name', 'qty']),

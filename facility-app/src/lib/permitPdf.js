@@ -54,6 +54,7 @@ export async function buildPermitPdf(r) {
   kv('PART B - PERMIT REQUESTOR (PR) DETAILS', [
     ['Requestor Name', r.requestor_name], ['Requestor Position', r.requestor_position],
     ['Requestor Company', r.requestor_company], ['Requestor Contact No.', r.requestor_contact],
+    ['Host Name', d.host?.name], ['Host Email', d.host?.email],
   ])
   kv('PART C - PROJECT DETAILS', [
     ['Request Type', r.request_type], ['Project / Activity Title', r.title], ['Work Description', r.description],
