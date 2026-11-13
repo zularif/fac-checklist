@@ -3,7 +3,7 @@
 CREATE TABLE permits (
   id TEXT PRIMARY KEY,
   ref TEXT UNIQUE NOT NULL,
-  status TEXT NOT NULL DEFAULT 'New',      -- New | Reviewing | Approved | Rejected | Closed
+  status TEXT NOT NULL DEFAULT 'New',      -- New | Keyed in | Reviewing | Approved | Rejected | Closed
   requestor_name TEXT,
   requestor_position TEXT,
   requestor_company TEXT,

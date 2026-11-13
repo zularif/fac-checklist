@@ -88,6 +88,13 @@ button{font:inherit;cursor:pointer}
 <form id="f" novalidate>
 <input type="text" name="website" id="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px" aria-hidden="true">
 
+<!-- PART A -->
+<section class="part"><h2><span class="tag">PART A</span> Host Details</h2>
+<div class="body"><div class="note" style="margin-bottom:12px">Enter the details of your <b>Wiwynn host</b> (the person who invited you to do the work). After you submit, your host will check your application and key it into the company permit system.</div><div class="grid">
+  <div class="field c6"><label class="l" for="hostName">Host Name <span class="req">*</span></label><input type="text" id="hostName" data-req placeholder="Name of your Wiwynn host"><div class="msg">Please enter the host name.</div></div>
+  <div class="field c6"><label class="l" for="hostEmail">Host Email <span class="req">*</span></label><input type="text" id="hostEmail" data-req data-email inputmode="email" autocomplete="off" placeholder="name@wiwynn.com"><div class="msg">Enter a valid email address.</div></div>
+</div></div></section>
+
 <!-- PART B -->
 <section class="part"><h2><span class="tag">PART B</span> Permit Requestor (PR) Details &ndash; Vendor Details</h2>
 <div class="body"><div class="grid">
@@ -95,8 +102,6 @@ button{font:inherit;cursor:pointer}
   <div class="field c6"><label class="l" for="reqPos">Requestor Position <span class="req">*</span></label><input type="text" id="reqPos" data-req><div class="msg">Please enter the position.</div></div>
   <div class="field c6"><label class="l" for="reqCo">Requestor Company <span class="req">*</span></label><input type="text" id="reqCo" data-req autocomplete="organization"><div class="msg">Please enter the company.</div></div>
   <div class="field c6"><label class="l" for="reqTel">Requestor Contact No. <span class="req">*</span></label><input type="tel" id="reqTel" data-req data-tel placeholder="01X-XXXXXXX" autocomplete="tel"><div class="msg">Enter a valid phone number (8-15 digits).</div></div>
-  <div class="field c6"><label class="l" for="hostName">Host Name <span class="req">*</span></label><input type="text" id="hostName" data-req placeholder="Wiwynn person hosting this work"><div class="msg">Please enter the host name.</div></div>
-  <div class="field c6"><label class="l" for="hostEmail">Host Email <span class="req">*</span></label><input type="text" id="hostEmail" data-req data-email inputmode="email" autocomplete="off" placeholder="name@wiwynn.com"><div class="msg">Enter a valid email address.</div></div>
 </div></div></section>
 
 <!-- PART C -->
@@ -167,7 +172,7 @@ button{font:inherit;cursor:pointer}
 
 <div id="status" role="status"></div>
 <div class="prog" id="prog"><div></div></div>
-<p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button type="submit" class="btn primary" id="submitBtn">Submit for approval</button><button type="button" class="btn" id="cancelBtn" style="background:#eceff3;padding:12px 22px">Cancel</button></p>
+<p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button type="submit" class="btn primary" id="submitBtn">Submit to host</button><button type="button" class="btn" id="cancelBtn" style="background:#eceff3;padding:12px 22px">Cancel</button></p>
 </form>
 <div id="done"></div>
 </main>
@@ -390,7 +395,8 @@ $("f").addEventListener("submit",async e=>{
     if(!res.ok || !j.ok) throw new Error(j.message || ("Server error ("+res.status+")"));
     setProg(100,"");
     $("f").style.display="none";
-    $("done").innerHTML=`<div class="success"><h3>Application submitted</h3><p>Your reference number is <b>${j.ref}</b>. Please quote it when contacting the facility team.</p></div>`;
+    const hn=$("hostName").value.trim().replace(/[<>&"]/g,"");
+    $("done").innerHTML=`<div class="success"><h3>Application submitted</h3><p>Your reference number is <b>${j.ref}</b>.</p><p>Please inform your host <b>${hn}</b> that you have submitted, and quote this reference number. Your host will check your details and key them into the company permit system.</p></div>`;
     window.scrollTo({top:0,behavior:"smooth"});
   }catch(err){
     btn.disabled=false; $("prog").style.display="none";

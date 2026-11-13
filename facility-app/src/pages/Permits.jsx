@@ -5,7 +5,7 @@ import { buildPermitPdf, buildPermitZip, safe } from '../lib/permitPdf'
 
 // Vendor work permit applications submitted from /vendor-permit.html.
 // Staff can read them, download the uploaded documents and set a status.
-const STATUSES = ['New', 'Reviewing', 'Approved', 'Rejected', 'Closed']
+const STATUSES = ['New', 'Keyed in', 'Reviewing', 'Approved', 'Rejected', 'Closed']
 const kb = (n) => (n >= 1048576 ? (n / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB')
 const when = (s) => (s ? new Date(s).toLocaleString('en-MY', { dateStyle: 'medium', timeStyle: 'short' }) : '')
 
@@ -128,7 +128,7 @@ export default function Permits() {
                 {isOpen && (
                   <div style={{ marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
                     <Row label="Requestor" value={`${r.requestor_name} (${r.requestor_position}) · ${r.requestor_contact}`} />
-                    <Row label="Host" value={d.host?.name ? `${d.host.name} · ${d.host.email}` : ''} />
+                    <Row label="Host (Part A)" value={d.host?.name ? `${d.host.name} · ${d.host.email}` : ''} />
                     <Row label="Work" value={r.description} />
                     <Row label="Dates" value={`${r.start_date} to ${r.target_date}`} />
                     <Row label="Category / location" value={[r.work_category, r.work_location].filter(Boolean).join(' / ')} />
