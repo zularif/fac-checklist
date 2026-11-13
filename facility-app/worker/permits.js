@@ -13,8 +13,8 @@ export const DOC_TYPES = {
 }
 const STATUSES = ['New', 'Reviewing', 'Approved', 'Rejected', 'Closed']
 const ALLOWED = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png']
-const MAX_FILE = 10 * 1024 * 1024      // per file, after compression
-const MAX_TOTAL = 40 * 1024 * 1024     // per application, after compression
+const MAX_FILE = 5 * 1024 * 1024       // per file, after compression
+const MAX_TOTAL = 20 * 1024 * 1024     // per application, after compression
 const MAX_PER_HOUR = 10                // applications per network address per hour
 
 const text = (v, max = 300) => String(v ?? '').trim().slice(0, max)
@@ -86,11 +86,11 @@ export async function submitPermit(env, request) {
     try { meta = JSON.parse(String(form.get('m_' + key) || '{}')) } catch { /* use defaults */ }
     const origName = safeName(meta.name || f.name)
     if (!ALLOWED.includes(origName.split('.').pop().toLowerCase())) throw apiError(`${DOC_TYPES[key]}: file type not allowed.`, 'P0001', 400)
-    if (f.size > MAX_FILE) throw apiError(`${DOC_TYPES[key]}: file is too large after compression (10 MB maximum).`, 'P0001', 413)
+    if (f.size > MAX_FILE) throw apiError(`${DOC_TYPES[key]}: file is too large (5 MB maximum). Please reduce the file size.`, 'P0001', 413)
     total += f.size
     incoming[key] = { f, origName, encoding: meta.encoding === 'gzip' ? 'gzip' : '', type: String(meta.type || '').slice(0, 100) || 'application/octet-stream', origSize: Number(meta.origSize) || f.size }
   }
-  if (total > MAX_TOTAL) throw apiError('The documents are too large in total (40 MB maximum).', 'P0001', 413)
+  if (total > MAX_TOTAL) throw apiError('The documents are too large in total (20 MB maximum).', 'P0001', 413)
   const needed = ['mos', 'hirarc', 'timeline', ...(big ? ['safetycert'] : [])]
   for (const k of needed) if (!incoming[k]) throw apiError(`${DOC_TYPES[k]} is required.`, 'P0001', 400)
 

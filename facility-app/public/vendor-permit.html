@@ -155,7 +155,8 @@ button{font:inherit;cursor:pointer}
 <!-- PART F -->
 <section class="part"><h2><span class="tag">PART F</span> Supporting Documents</h2>
 <div class="body">
-  <p style="margin:0 0 10px;color:var(--mut);font-size:12.5px">Accepted: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG &middot; Files are compressed automatically before upload (photos are resized; other files are zipped when this helps). Max 25 MB per file before compression.</p>
+  <p style="margin:0 0 10px;color:var(--mut);font-size:12.5px">Accepted: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG &middot; Files are compressed automatically before upload (photos are resized; other files are zipped when this helps). Maximum <b>5 MB per file</b> and 20 MB in total after compression.</p>
+  <div class="note"><b>Tip for large PDFs:</b> re-save or print the PDF using a &ldquo;smaller size / reduce file size&rdquo; option, or scan documents at 150 dpi in black &amp; white or grayscale. Photos are reduced automatically.</div>
   <div class="docs" id="docs"></div>
 </div></section>
 
@@ -176,7 +177,7 @@ button{font:inherit;cursor:pointer}
 /* ========= CONFIG ========= */
 const SUBMIT_URL = "/api/public/permit";
 const MAX_MB = 25;                 // original file size limit (compressed later)
-const MAX_SERVER_MB = 10;          // limit after compression
+const MAX_SERVER_MB = 5;           // limit after compression
 const ALLOWED = ["pdf","doc","docx","xls","xlsx","jpg","jpeg","png"];
 /* ========================== */
 
@@ -208,7 +209,7 @@ DOCS.forEach(d=>{
     if(!f) return;
     const ext = f.name.split(".").pop().toLowerCase();
     if(!ALLOWED.includes(ext)){ showDocErr(el,"File type not allowed."); return; }
-    if(f.size > MAX_MB*1048576){ showDocErr(el,"File exceeds "+MAX_MB+" MB."); return; }
+    if(f.size > MAX_MB*1048576){ showDocErr(el,"File exceeds "+MAX_MB+" MB. Please reduce the file size."); return; }
     files[d.k]=f; el.classList.add("has");
     el.querySelector(".fname").textContent = f.name+" ("+(f.size/1048576).toFixed(2)+" MB)";
     el.querySelector(".rm").hidden=false;
@@ -345,7 +346,7 @@ $("f").addEventListener("submit",async e=>{
       fd.append("f_"+k, p.blob, p.name);
       fd.append("m_"+k, JSON.stringify({name:p.name,type:p.type,encoding:p.encoding,origSize:p.origSize}));
     }
-    if(total > 40*1048576) throw new Error("Documents are too large in total after compression (40 MB maximum).");
+    if(total > 20*1048576) throw new Error("Documents are too large in total (20 MB maximum). Please reduce the file sizes.");
     fd.append("data", JSON.stringify(data));
     fd.append("website", $("website").value);
     setProg(70,"Uploading "+fmtMB(total)+"...");
