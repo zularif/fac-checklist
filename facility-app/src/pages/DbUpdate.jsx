@@ -13,7 +13,7 @@ async function call(method) {
   return body
 }
 
-const NAMES = { '0001_init.sql': 'Core tables (equipment, inspections, staff, extinguishers, tasks)', '0002_inventory.sql': 'Spare parts inventory (P1 / P2 stores)' }
+const NAMES = { '0001_init.sql': 'Core tables (equipment, inspections, staff, extinguishers, tasks)', '0002_inventory.sql': 'Spare parts inventory (P1 / P2 stores)', '0003_permits.sql': 'Vendor work permit applications' }
 
 export default function DbUpdate() {
   const isAdmin = useIsAdmin()

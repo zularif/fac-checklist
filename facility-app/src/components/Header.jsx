@@ -43,7 +43,8 @@ const GROUPS = [
   ] },
   { id: 'permit', icon: 'ti-file-certificate', label: 'Vendor Permit', items: [
     // A separate standalone page (public/vendor-permit.html). Vendors can open the same link directly; files go to Google Drive.
-    { href: '/vendor-permit.html', icon: 'ti-file-certificate', label: 'Work Permit Application' },
+    { to: '/permits', icon: 'ti-inbox', label: 'Received applications' },
+    { href: '/vendor-permit.html', icon: 'ti-file-certificate', label: 'Vendor application form' },
   ] },
   { id: 'admin', icon: 'ti-settings', label: 'Admin', items: [
     { to: '/admin', icon: 'ti-home-cog', label: 'Admin home', adminOnly: true },

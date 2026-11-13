@@ -125,6 +125,14 @@ export const TABLES = {
     touch: 'updated_at',
     read: 'active', write: 'any',
   },
+  permits: {
+    columns: {
+      id: U, ref: T, status: T, requestor_name: T, requestor_position: T, requestor_company: T, requestor_contact: T,
+      request_type: T, title: T, description: T, plant: T, po_number: T, total_workers: I, start_date: D, target_date: D,
+      work_category: T, work_location: T, permit_types: T, data: J, files: J, created_at: TS,
+    },
+    read: 'active', write: 'none', noDelete: true,
+  },
   parts: {
     columns: {
       id: U, part_code: T, part_name: T, category: T, description: T, brand: T, model: T, unit: T,

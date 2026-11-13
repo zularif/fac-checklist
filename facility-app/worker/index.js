@@ -8,6 +8,7 @@
 //   POST /api/functions/:name    admin function (manage-tech)   -> result
 //   PUT  /api/storage/:bucket/*  upload a file (floor plans)
 //   GET  /files/:bucket/*        read a file
+//   POST /api/public/permit      vendor work permit application (no sign-in)
 //
 // Bindings (wrangler.jsonc): DB (D1), FILES (KV), ASSETS (static files)
 // Secrets: JWT_SECRET, PIN_PEPPER, SETUP_KEY (first-time setup at /setup)
@@ -18,14 +19,16 @@ import { authenticate, loginWithPin, loginWithPassword, signToken } from './auth
 import { RPC as CORE_RPC, FUNCTIONS } from './rpc.js'
 import { runSetup, adminDbUpdate } from './setup.js'
 import { INVENTORY_RPC } from './inventory.js'
+import { PERMIT_RPC, submitPermit } from './permits.js'
 
-const RPC = { ...CORE_RPC, ...INVENTORY_RPC }
+const RPC = { ...CORE_RPC, ...INVENTORY_RPC, ...PERMIT_RPC }
 
 const BUCKETS = {
   parts: { write: 'admin', publicRead: true },
   floorplans: { write: 'admin', publicRead: true },
   photos: { write: 'any', publicRead: false },
   signatures: { write: 'any', publicRead: false },
+  permits: { write: 'none', publicRead: false },
 }
 const MAX_UPLOAD = 20 * 1024 * 1024
 
@@ -57,6 +60,8 @@ async function handleApi(request, env, url) {
   if (method === 'POST' && path === '/api/auth/pin') return json(await loginWithPin(env, request, await readJson(request)))
   if (method === 'POST' && path === '/api/auth/password') return json(await loginWithPassword(env, request, await readJson(request)))
 
+  if (method === 'POST' && path === '/api/public/permit') return json(await submitPermit(env, request))
+
   const auth = await authenticate(env, request)
   const ctx = { env, db: env.DB, user: auth.user, actor: auth.actor }
 
@@ -86,6 +91,7 @@ async function handleApi(request, env, url) {
     const key = storageKey(m[1], m[2])
     const rule = BUCKETS[m[1]]
     if (!ctx.actor) throw apiError('permission denied', '42501', 403)
+    if (rule.write === 'none') throw apiError('permission denied', '42501', 403)
     if (rule.write === 'admin' && ctx.actor.role !== 'Admin') throw apiError('permission denied: administrator required', '42501', 403)
     const upsert = url.searchParams.get('upsert') === 'true'
     if (!upsert && (await env.FILES.get(key, 'arrayBuffer')) !== null) throw apiError('The resource already exists', 'Duplicate', 409)
@@ -119,6 +125,7 @@ async function handleFile(request, env, url) {
       'Content-Type': metadata?.contentType || 'application/octet-stream',
       'Cache-Control': BUCKETS[m[1]].publicRead ? 'public, max-age=300' : 'private, max-age=300',
       'X-Content-Type-Options': 'nosniff',
+      ...(metadata?.encoding === 'gzip' ? { 'Content-Encoding': 'gzip' } : {}),
     },
   })
 }

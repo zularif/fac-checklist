@@ -77,14 +77,14 @@ button{font:inherit;cursor:pointer}
 <body>
 <header class="top">
   <h1>Vendor Work Permit Application</h1>
-  <p>Facility Management &middot; All supporting documents are stored in the company Google Drive</p>
+  <p>Facility Management &middot; Documents are compressed and stored securely in the company system</p>
   <p style="margin-top:6px"><a href="/" style="color:#fca311;font-size:12.5px">&larr; Back to Facility Maintenance app</a></p>
 </header>
 
 <main>
-<div class="warn" id="cfgWarn">Setup incomplete: set <code>SCRIPT_URL</code> in this file to your Google Apps Script web app URL. Until then, submissions will not be saved.</div>
 
 <form id="f" novalidate>
+<input type="text" name="website" id="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px" aria-hidden="true">
 
 <!-- PART B -->
 <section class="part"><h2><span class="tag">PART B</span> Permit Requestor (PR) Details</h2>
@@ -155,7 +155,7 @@ button{font:inherit;cursor:pointer}
 <!-- PART F -->
 <section class="part"><h2><span class="tag">PART F</span> Supporting Documents</h2>
 <div class="body">
-  <p style="margin:0 0 10px;color:var(--mut);font-size:12.5px">Accepted: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG &middot; Max 8 MB per file &middot; Files are saved to Google Drive on submission.</p>
+  <p style="margin:0 0 10px;color:var(--mut);font-size:12.5px">Accepted: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG &middot; Files are compressed automatically before upload (photos are resized; other files are zipped when this helps). Max 25 MB per file before compression.</p>
   <div class="docs" id="docs"></div>
 </div></section>
 
@@ -174,9 +174,9 @@ button{font:inherit;cursor:pointer}
 
 <script>
 /* ========= CONFIG ========= */
-const SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
-const SHARED_KEY = "change-me";           // must match SHARED_KEY in Code.gs
-const MAX_MB = 8;
+const SUBMIT_URL = "/api/public/permit";
+const MAX_MB = 25;                 // original file size limit (compressed later)
+const MAX_SERVER_MB = 10;          // limit after compression
 const ALLOWED = ["pdf","doc","docx","xls","xlsx","jpg","jpeg","png"];
 /* ========================== */
 
@@ -192,7 +192,6 @@ const DOCS = [
 const files = {};
 const $ = id => document.getElementById(id);
 
-if (SCRIPT_URL.startsWith("PASTE")) $("cfgWarn").style.display = "block";
 
 /* ---- upload cards ---- */
 DOCS.forEach(d=>{
@@ -279,16 +278,40 @@ function validate(){
 }
 document.querySelectorAll("input,select,textarea").forEach(i=>i.addEventListener("input",()=>i.closest(".field")?.classList.remove("invalid")));
 
-/* ---- network ---- */
-async function post(obj){
-  obj.key=SHARED_KEY;
-  const r=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify(obj)});
-  const j=await r.json();
-  if(!j.ok) throw new Error(j.error||"Server error");
-  return j;
+/* ---- compression ---- */
+const fmtMB = n => (n/1048576).toFixed(2)+" MB";
+function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),i=new Image();i.onload=()=>{URL.revokeObjectURL(u);res(i)};i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("Cannot read image"))};i.src=u;});}
+const toBlob = (c,q)=>new Promise(r=>c.toBlob(b=>r(b),"image/jpeg",q));
+async function compressImage(file){
+  const img = await loadImg(file), target = 700*1024;
+  let side = 2000, best = null;
+  for(let a=0;a<4;a++){
+    const sc = Math.min(1, side/Math.max(img.naturalWidth,img.naturalHeight));
+    const c = document.createElement("canvas"); c.width=Math.max(1,Math.round(img.naturalWidth*sc)); c.height=Math.max(1,Math.round(img.naturalHeight*sc));
+    const x = c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height);
+    for(let q=0.8;q>=0.45;q-=0.1){ const b=await toBlob(c,q); if(b){ best=b; if(b.size<=target) return b; } }
+    side=Math.round(side*0.75);
+  }
+  return best;
 }
-function toB64(file){
-  return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(",")[1]);fr.onerror=rej;fr.readAsDataURL(file);});
+async function gzipBlob(file){
+  const cs = new Response(file.stream().pipeThrough(new CompressionStream("gzip")));
+  return await cs.blob();
+}
+/* returns {blob, name, type, encoding, origSize} */
+async function prepare(file){
+  const ext = file.name.split(".").pop().toLowerCase(), base = file.name.replace(/\.[^.]+$/,"");
+  const out = {blob:file, name:file.name, type:file.type||"application/octet-stream", encoding:"", origSize:file.size};
+  try{
+    if(["jpg","jpeg","png"].includes(ext)){
+      const b = await compressImage(file);
+      if(b && b.size < file.size*0.95){ out.blob=b; out.name=base+".jpg"; out.type="image/jpeg"; }
+    } else if(typeof CompressionStream !== "undefined"){
+      const g = await gzipBlob(file);
+      if(g.size < file.size*0.9){ out.blob=g; out.encoding="gzip"; }
+    }
+  }catch(e){ /* fall back to the original file */ }
+  return out;
 }
 function setProg(p,t){ $("prog").style.display="block"; $("prog").firstElementChild.style.width=p+"%"; $("status").textContent=t; }
 
@@ -298,7 +321,6 @@ $("f").addEventListener("submit",async e=>{
   $("status").textContent="";
   const bad=validate();
   if(bad.length){ $("status").style.color="var(--err)"; $("status").textContent="Please fix "+bad.length+" highlighted item(s) before submitting."; bad[0].scrollIntoView({behavior:"smooth",block:"center"}); return; }
-  if(SCRIPT_URL.startsWith("PASTE")){ $("status").style.color="var(--err)"; $("status").textContent="Setup incomplete: SCRIPT_URL is not configured."; return; }
   $("status").style.color="var(--navy)";
   const btn=$("submitBtn"); btn.disabled=true;
   const data={
@@ -312,20 +334,28 @@ $("f").addEventListener("submit",async e=>{
     submittedAt:new Date().toISOString()
   };
   try{
-    setProg(3,"Creating Drive folder...");
-    const c=await post({action:"create",company:data.requestor.company,title:data.project.title});
-    const list=Object.keys(files); let n=0;
-    for(const k of list){
-      const d=DOCS.find(x=>x.k===k);
-      setProg(5+Math.round(85*n/Math.max(list.length,1)),"Uploading "+d.label+" ("+(n+1)+"/"+list.length+")...");
-      await post({action:"upload",folderId:c.folderId,docKey:k,label:d.label,name:files[k].name,mime:files[k].type||"application/octet-stream",data:await toB64(files[k])});
-      n++;
+    const fd = new FormData();
+    const list = Object.keys(files); let total = 0;
+    for(let i=0;i<list.length;i++){
+      const k=list[i], d=DOCS.find(x=>x.k===k);
+      setProg(5+Math.round(60*i/list.length),"Compressing "+d.label+" ("+(i+1)+"/"+list.length+")...");
+      const p = await prepare(files[k]);
+      if(p.blob.size > MAX_SERVER_MB*1048576) throw new Error(d.label+" is still larger than "+MAX_SERVER_MB+" MB after compression. Please reduce the file size.");
+      total += p.blob.size;
+      fd.append("f_"+k, p.blob, p.name);
+      fd.append("m_"+k, JSON.stringify({name:p.name,type:p.type,encoding:p.encoding,origSize:p.origSize}));
     }
-    setProg(94,"Saving application details...");
-    const fin=await post({action:"finish",folderId:c.folderId,ref:c.ref,data:data,fileNames:list.map(k=>({doc:k,name:files[k].name}))});
+    if(total > 40*1048576) throw new Error("Documents are too large in total after compression (40 MB maximum).");
+    fd.append("data", JSON.stringify(data));
+    fd.append("website", $("website").value);
+    setProg(70,"Uploading "+fmtMB(total)+"...");
+    let res, j = {};
+    try{ res = await fetch(SUBMIT_URL,{method:"POST",body:fd}); }catch(e){ throw new Error("Network error. Check your connection."); }
+    try{ j = await res.json(); }catch(e){}
+    if(!res.ok || !j.ok) throw new Error(j.message || ("Server error ("+res.status+")"));
     setProg(100,"");
     $("f").style.display="none";
-    $("done").innerHTML=`<div class="success"><h3>Application submitted</h3><p>Your reference number is <b>${c.ref}</b>. Please quote it when contacting the facility team.</p><p>All documents were saved to the company Google Drive.</p></div>`;
+    $("done").innerHTML=`<div class="success"><h3>Application submitted</h3><p>Your reference number is <b>${j.ref}</b>. Please quote it when contacting the facility team.</p></div>`;
     window.scrollTo({top:0,behavior:"smooth"});
   }catch(err){
     btn.disabled=false; $("prog").style.display="none";
