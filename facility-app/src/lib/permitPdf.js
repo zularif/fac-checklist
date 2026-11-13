@@ -74,7 +74,7 @@ export async function buildPermitPdf(r) {
   ])
   grid('Sub-Contractor Details', ['Company Name', 'Safety Full Name', 'DOSH Registration No.'], (d.subcontractors || []).map((x) => [x.company, x.safetyName, x.dosh]))
   grid('PART F - SUPPORTING DOCUMENTS', ['Document', 'File name', 'Size'],
-    DOC_LABELS.map((label) => { const f = files.find((x) => x.label === label); return [label, f ? f.name : 'Not provided', f ? kb(f.origSize || f.size) : '-'] }))
+    DOC_LABELS.map((label) => { const fs = files.filter((x) => x.label === label); return [label, fs.length ? fs.map((x) => x.name).join(', ') : 'Not provided', fs.length ? kb(fs.reduce((n, x) => n + (x.origSize || x.size || 0), 0)) : '-'] }))
   room(60)
   autoTable(doc, {
     startY: y, margin: { left: M, right: M }, theme: 'grid', head: head('OFFICE USE ONLY'),

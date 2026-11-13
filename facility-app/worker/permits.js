@@ -11,6 +11,10 @@ export const DOC_TYPES = {
   safetycert: 'Safety Personnel Certificate', drawing: 'Drawing Layout',
   machinecert: 'Machine Certificate', sds: 'Safety Data Sheet (SDS)',
 }
+const SINGLE_FILE_DOCS = ['timeline', 'drawing']   // the other documents accept several files
+const MAX_FILES_PER_DOC = 10
+const CATEGORIES = ['Maintenance', 'Construction', 'Installation', 'Inspection']
+const LOCATIONS = ['Production Area', 'Non-Production Area', 'Facility Area', 'Perimeter Area']
 const STATUSES = ['New', 'Reviewing', 'Approved', 'Rejected', 'Closed']
 const ALLOWED = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png']
 const MAX_FILE = 5 * 1024 * 1024       // per file, after compression
@@ -65,9 +69,11 @@ export async function submitPermit(env, request) {
     requestor_name: req(r.name, 'Requestor name', 100), requestor_position: req(r.position, 'Requestor position', 100),
     requestor_company: req(r.company, 'Requestor company', 150), requestor_contact: req(r.contact, 'Requestor contact no.', 30),
     request_type: req(p.requestType, 'Request type', 20), title: req(p.title, 'Project title', 200), description: req(p.description, 'Work description', 3000),
-    plant: req(p.plant, 'Plant', 5), po_number: text(p.po, 60), start_date: req(p.startDate, 'Start date', 10), target_date: req(p.targetCompletion, 'Target completion date', 10),
-    work_category: text(p.category, 100), work_location: text(p.location, 200),
+    plant: req(p.plant, 'Plant', 5), po_number: req(p.po, 'PO number', 60), start_date: req(p.startDate, 'Start date', 10), target_date: req(p.targetCompletion, 'Target completion date', 10),
+    work_category: req(p.category, 'Work category', 100), work_location: req(p.location, 'Work location', 200),
   }
+  if (!CATEGORIES.includes(rec.work_category)) throw apiError('Invalid work category.', 'P0001', 400)
+  if (!LOCATIONS.includes(rec.work_location)) throw apiError('Invalid work location.', 'P0001', 400)
   if (!['New', 'Renewal', 'Extension', 'Revision'].includes(rec.request_type)) throw apiError('Invalid request type.', 'P0001', 400)
   if (!['P1', 'P2'].includes(rec.plant)) throw apiError('Invalid plant.', 'P0001', 400)
   if (rec.target_date < rec.start_date) throw apiError('Completion date cannot be before the start date.', 'P0001', 400)
@@ -78,23 +84,28 @@ export async function submitPermit(env, request) {
   const big = workers >= 5
   if (big && !(text(mc.name) && text(mc.company) && text(mc.dosh))) throw apiError('Main contractor safety personnel details are required for 5 or more workers.', 'P0001', 400)
 
-  // Files
+  // Files: form fields f_<doc>_<n> (the file) and m_<doc>_<n> (its compression details)
   const incoming = {}
   let total = 0
-  for (const key of Object.keys(DOC_TYPES)) {
-    const f = form.get('f_' + key)
-    if (!f || typeof f === 'string' || !f.size) continue
+  for (const [name, f] of form.entries()) {
+    const m = /^f_([a-z]+)_(\d{1,2})$/.exec(name)
+    if (!m || !DOC_TYPES[m[1]] || !f || typeof f === 'string' || !f.size) continue
+    const key = m[1], idx = Number(m[2])
     let meta = {}
-    try { meta = JSON.parse(String(form.get('m_' + key) || '{}')) } catch { /* use defaults */ }
+    try { meta = JSON.parse(String(form.get(`m_${key}_${idx}`) || '{}')) } catch { /* use defaults */ }
     const origName = safeName(meta.name || f.name)
     if (!ALLOWED.includes(origName.split('.').pop().toLowerCase())) throw apiError(`${DOC_TYPES[key]}: file type not allowed.`, 'P0001', 400)
-    if (f.size > MAX_FILE) throw apiError(`${DOC_TYPES[key]}: file is too large (5 MB maximum). Please reduce the file size.`, 'P0001', 413)
+    if (f.size > MAX_FILE) throw apiError(`${DOC_TYPES[key]}: ${origName} is too large (5 MB maximum). Please reduce the file size.`, 'P0001', 413)
     total += f.size
-    incoming[key] = { f, origName, encoding: meta.encoding === 'gzip' ? 'gzip' : '', type: String(meta.type || '').slice(0, 100) || 'application/octet-stream', origSize: Number(meta.origSize) || f.size }
+    ;(incoming[key] ||= []).push({ idx, f, origName, encoding: meta.encoding === 'gzip' ? 'gzip' : '', type: String(meta.type || '').slice(0, 100) || 'application/octet-stream', origSize: Number(meta.origSize) || f.size })
   }
   if (total > MAX_TOTAL) throw apiError('The documents are too large in total (20 MB maximum).', 'P0001', 413)
+  for (const [key, arr] of Object.entries(incoming)) {
+    if (SINGLE_FILE_DOCS.includes(key) && arr.length > 1) throw apiError(`${DOC_TYPES[key]}: only one file is allowed.`, 'P0001', 400)
+    if (arr.length > MAX_FILES_PER_DOC) throw apiError(`${DOC_TYPES[key]}: at most ${MAX_FILES_PER_DOC} files are allowed.`, 'P0001', 400)
+  }
   const needed = ['mos', 'hirarc', 'timeline', ...(big ? ['safetycert'] : [])]
-  for (const k of needed) if (!incoming[k]) throw apiError(`${DOC_TYPES[k]} is required.`, 'P0001', 400)
+  for (const k of needed) if (!incoming[k]?.length) throw apiError(`${DOC_TYPES[k]} is required.`, 'P0001', 400)
 
   const data = {
     host,
@@ -110,11 +121,13 @@ export async function submitPermit(env, request) {
   const files = []
   const written = []
   try {
-    for (const [doc, v] of Object.entries(incoming)) {
-      const key = `permits/${id}/${doc}-${v.origName}`
-      await putDoc(env, key, await v.f.arrayBuffer(), { contentType: v.type, encoding: v.encoding, originalName: v.origName, uploadedAt: new Date().toISOString() })
-      written.push(key)
-      files.push({ doc, label: DOC_TYPES[doc], name: v.origName, key: `${id}/${doc}-${v.origName}`, size: v.f.size, origSize: v.origSize, encoding: v.encoding, type: v.type })
+    for (const [doc, arr] of Object.entries(incoming)) {
+      for (const [n, v] of arr.entries()) {
+        const key = `permits/${id}/${doc}-${n + 1}-${v.origName}`
+        await putDoc(env, key, await v.f.arrayBuffer(), { contentType: v.type, encoding: v.encoding, originalName: v.origName, uploadedAt: new Date().toISOString() })
+        written.push(key)
+        files.push({ doc, label: DOC_TYPES[doc], name: v.origName, key: key.slice('permits/'.length), size: v.f.size, origSize: v.origSize, encoding: v.encoding, type: v.type })
+      }
     }
     for (let attempt = 0; ; attempt++) {
       try {

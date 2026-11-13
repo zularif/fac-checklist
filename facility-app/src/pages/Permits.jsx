@@ -150,7 +150,7 @@ export default function Permits() {
                     <p style={{ margin: '10px 0 4px', fontWeight: 700, fontSize: 13 }}>Documents</p>
                     {(r.files || []).map((f) => (
                       <button key={f.key} type="button" className="btn-secondary" style={{ width: 'auto', padding: '6px 12px', margin: '0 6px 6px 0' }} onClick={() => get(f)}>
-                        <i className="ti ti-download" aria-hidden="true" />{f.label} <span style={{ opacity: 0.6 }}>({kb(f.size)})</span>
+                        <i className="ti ti-download" aria-hidden="true" />{f.label}: {f.name} <span style={{ opacity: 0.6 }}>({kb(f.size)})</span>
                       </button>
                     ))}
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>

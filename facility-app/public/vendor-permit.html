@@ -64,8 +64,10 @@ button{font:inherit;cursor:pointer}
 .doc input[type=file]{display:none}
 .doc .btn.up{background:var(--navy);color:#fff}
 .doc .btn.rm{background:none;color:var(--err);text-decoration:underline;padding:0}
-.decl{display:flex;gap:10px;align-items:flex-start}
-.decl input{margin-top:3px;width:18px;height:18px}
+.doc .flist{margin:6px 0}
+.doc .fitem{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:12.5px;padding:3px 0;border-bottom:1px solid #e5e7eb;word-break:break-all}
+.doc .fitem button{background:none;border:0;color:var(--err);text-decoration:underline;padding:0}
+.doc .mode{font-size:11.5px;font-style:italic;color:var(--mut);margin:0 0 6px}
 #status{margin:12px 0;font-weight:600}
 .prog{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-top:6px;display:none}
 .prog>div{height:100%;width:0;background:var(--amber);transition:width .2s}
@@ -87,12 +89,12 @@ button{font:inherit;cursor:pointer}
 <input type="text" name="website" id="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px" aria-hidden="true">
 
 <!-- PART B -->
-<section class="part"><h2><span class="tag">PART B</span> Permit Requestor (PR) Details</h2>
+<section class="part"><h2><span class="tag">PART B</span> Permit Requestor (PR) Details &ndash; Vendor Details</h2>
 <div class="body"><div class="grid">
   <div class="field c6"><label class="l" for="reqName">Requestor Name <span class="req">*</span></label><input type="text" id="reqName" data-req autocomplete="name"><div class="msg">Please enter the requestor name.</div></div>
   <div class="field c6"><label class="l" for="reqPos">Requestor Position <span class="req">*</span></label><input type="text" id="reqPos" data-req><div class="msg">Please enter the position.</div></div>
   <div class="field c6"><label class="l" for="reqCo">Requestor Company <span class="req">*</span></label><input type="text" id="reqCo" data-req autocomplete="organization"><div class="msg">Please enter the company.</div></div>
-  <div class="field c6"><label class="l" for="reqTel">Requestor Contact No. <span class="req">*</span></label><input type="tel" id="reqTel" data-req data-tel placeholder="e.g. 012-3456789" autocomplete="tel"><div class="msg">Enter a valid phone number (8-15 digits).</div></div>
+  <div class="field c6"><label class="l" for="reqTel">Requestor Contact No. <span class="req">*</span></label><input type="tel" id="reqTel" data-req data-tel placeholder="01X-XXXXXXX" autocomplete="tel"><div class="msg">Enter a valid phone number (8-15 digits).</div></div>
   <div class="field c6"><label class="l" for="hostName">Host Name <span class="req">*</span></label><input type="text" id="hostName" data-req placeholder="Wiwynn person hosting this work"><div class="msg">Please enter the host name.</div></div>
   <div class="field c6"><label class="l" for="hostEmail">Host Email <span class="req">*</span></label><input type="text" id="hostEmail" data-req data-email inputmode="email" autocomplete="off" placeholder="name@wiwynn.com"><div class="msg">Enter a valid email address.</div></div>
 </div></div></section>
@@ -104,19 +106,19 @@ button{font:inherit;cursor:pointer}
     <select id="reqType" data-req><option value="">Select...</option><option>New</option><option>Renewal</option><option>Extension</option><option>Revision</option></select><div class="msg">Select a request type.</div></div>
   <div class="field c4"><label class="l" for="plant">Plant <span class="req">*</span></label>
     <select id="plant" data-req><option value="">Select...</option><option>P1</option><option>P2</option></select><div class="msg">Select a plant.</div></div>
-  <div class="field c4"><label class="l" for="po">PO Number</label><input type="text" id="po"></div>
+  <div class="field c4"><label class="l" for="po">PO Number <span class="req">*</span></label><input type="text" id="po" data-req><div class="msg">Please enter the PO number.</div></div>
   <div class="field c12"><label class="l" for="title">Project / Activity Title <span class="req">*</span></label><input type="text" id="title" data-req><div class="msg">Please enter the project / activity title.</div></div>
   <div class="field c12"><label class="l" for="desc">Work Description <span class="req">*</span></label><textarea id="desc" data-req></textarea><div class="msg">Please describe the work.</div></div>
   <div class="field c3"><label class="l" for="workers">Total Workers <span class="req">*</span></label><input type="number" id="workers" min="1" step="1" data-req><div class="msg">Enter number of workers (1 or more).</div></div>
   <div class="field c3"><label class="l" for="start">Start Date <span class="req">*</span></label><input type="date" id="start" data-req><div class="msg">Select a start date.</div></div>
   <div class="field c3"><label class="l" for="end">Target Completion Date <span class="req">*</span></label><input type="date" id="end" data-req><div class="msg" id="endMsg">Select a completion date.</div></div>
-  <div class="field c3"><label class="l" for="cat">Work Category</label><input type="text" id="cat" list="catList" placeholder="Type to search..."><datalist id="catList"><option>Civil / Building</option><option>Mechanical</option><option>Electrical</option><option>Plumbing &amp; Piping</option><option>HVAC</option><option>Fire Protection</option><option>Painting / Coating</option><option>Roofing</option><option>Cleaning</option><option>Installation / Commissioning</option><option>Others</option></datalist></div>
-  <div class="field c12"><label class="l" for="loc">Work Location</label><input type="text" id="loc" list="locList" placeholder="Type to search or enter a location..."><datalist id="locList"><option>Production Area</option><option>Warehouse</option><option>Roof</option><option>Utility Room</option><option>Chiller Plant</option><option>Electrical Room</option><option>Car Park</option><option>Outdoor / External</option><option>Office Area</option></datalist></div>
+  <div class="field c3"><label class="l" for="cat">Work Category <span class="req">*</span></label><select id="cat" data-req><option value="">Select one category</option><option>Maintenance</option><option>Construction</option><option>Installation</option><option>Inspection</option></select><div class="msg">Select a work category.</div></div>
+  <div class="field c12"><label class="l" for="loc">Work Location <span class="req">*</span></label><select id="loc" data-req><option value="">Select applicable location</option><option>Production Area</option><option>Non-Production Area</option><option>Facility Area</option><option>Perimeter Area</option></select><div class="msg">Select a work location.</div></div>
 </div>
 <div class="divider"></div>
-<div class="field" id="permitField"><label class="l">Applicable Permit <span class="req">*</span> <span style="text-transform:none;font-weight:400;color:var(--mut)">(select all that apply)</span></label>
+<div class="field" id="permitField"><label class="l">Applicable Permit <span class="req">*</span> <span style="text-transform:none;font-weight:400;font-style:italic;color:var(--mut)">**Please select all permit types required for this project / activity</span></label>
 <div class="chips" id="permits">
-  <label class="chip"><input type="checkbox" value="GEN"><span><b>GEN</b> &ndash; General Permit</span></label>
+  <label class="chip"><input type="checkbox" value="GEN" checked><span><b>GEN</b> &ndash; General Permit</span></label>
   <label class="chip"><input type="checkbox" value="WAH"><span><b>WAH</b> &ndash; Work at Height</span></label>
   <label class="chip"><input type="checkbox" value="HW"><span><b>HW</b> &ndash; Hot Work</span></label>
   <label class="chip"><input type="checkbox" value="LP"><span><b>LP</b> &ndash; Lifting</span></label>
@@ -129,7 +131,7 @@ button{font:inherit;cursor:pointer}
 <!-- PART D -->
 <section class="part"><h2><span class="tag">PART D</span> Machine / Equipment / Chemical Details</h2>
 <div class="body">
-  <div class="sub"><span>A. Machine</span><button type="button" class="btn add" data-add="machine">+ Add row</button></div>
+  <div class="sub"><span>A. Machine <small style="font-weight:400;color:var(--mut)">&ndash; machinery requiring Certificate of Fitness from DOSH, e.g. scissor lift</small></span><button type="button" class="btn add" data-add="machine">+ Add row</button></div>
   <div id="machine"></div>
   <div class="divider"></div>
   <div class="sub"><span>B. Equipment</span><button type="button" class="btn add" data-add="equipment">+ Add row</button></div>
@@ -150,27 +152,22 @@ button{font:inherit;cursor:pointer}
     <div class="field c4"><label class="l" for="mcDosh">Maincon Registration DOSH <span class="req cond">*</span></label><input type="text" id="mcDosh" data-cond><div class="msg">Required for 5 or more workers.</div></div>
   </div>
   <div class="divider"></div>
-  <div class="sub"><span>Sub-Contractor Details</span><button type="button" class="btn add" data-add="sub">+ Add sub-contractor</button></div>
+  <div class="sub"><span>Sub-Contractor Details <small style="font-weight:400;color:var(--mut)">(If applicable)</small></span><button type="button" class="btn add" data-add="sub">+ Add sub-contractor</button></div>
   <div id="sub"></div>
 </div></section>
 
 <!-- PART F -->
 <section class="part"><h2><span class="tag">PART F</span> Supporting Documents</h2>
 <div class="body">
-  <p style="margin:0 0 10px;color:var(--mut);font-size:12.5px">Accepted: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG &middot; Files are compressed automatically before upload (photos are resized; other files are zipped when this helps). Maximum <b>5 MB per file</b> and 20 MB in total after compression.</p>
+  <p id="upCount" style="margin:0 0 8px;font-weight:700"></p>
+  <p style="margin:0 0 10px;color:var(--mut);font-size:12.5px">Accepted: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG &middot; Files are compressed automatically before upload (photos are resized; other files are zipped when this helps). Maximum <b>5 MB per file</b> and 20 MB in total after compression; up to 10 files per document.</p>
   <div class="note"><b>Tip for large PDFs:</b> re-save or print the PDF using a &ldquo;smaller size / reduce file size&rdquo; option, or scan documents at 150 dpi in black &amp; white or grayscale. Photos are reduced automatically.</div>
   <div class="docs" id="docs"></div>
 </div></section>
 
-<!-- Declaration -->
-<section class="part"><h2>Declaration</h2>
-<div class="body">
-  <div class="field"><label class="decl"><input type="checkbox" id="decl"><span>I declare that the information and documents provided are true and complete, and that all work will comply with the facility's safety rules and applicable DOSH regulations.</span></label><div class="msg">You must accept the declaration.</div></div>
-</div></section>
-
 <div id="status" role="status"></div>
 <div class="prog" id="prog"><div></div></div>
-<p><button type="submit" class="btn primary" id="submitBtn">Submit Application</button></p>
+<p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button type="submit" class="btn primary" id="submitBtn">Submit for approval</button><button type="button" class="btn" id="cancelBtn" style="background:#eceff3;padding:12px 22px">Cancel</button></p>
 </form>
 <div id="done"></div>
 </main>
@@ -183,47 +180,80 @@ const MAX_SERVER_MB = 5;           // limit after compression
 const ALLOWED = ["pdf","doc","docx","xls","xlsx","jpg","jpeg","png"];
 /* ========================== */
 
+const MAX_FILES_PER_DOC = 10;
 const DOCS = [
-  {k:"mos",  label:"Method of Statement (MOS)", t:"r", hint:"Work method and sequence of activities."},
-  {k:"hirarc",label:"HIRARC", t:"r", hint:"Hazard identification, risk assessment and risk control."},
-  {k:"timeline",label:"Project Timeline", t:"r", hint:"Schedule of work activities."},
-  {k:"safetycert",label:"Safety Personnel Certificate", t:"c", hint:"Required when Total Workers is 5 or more."},
-  {k:"drawing",label:"Drawing Layout", t:"o", hint:"Site / work area layout drawing."},
-  {k:"machinecert",label:"Machine Certificate", t:"o", hint:"Inspection / calibration certificate."},
-  {k:"sds",label:"Safety Data Sheet (SDS)", t:"o", hint:"For each chemical to be used."}
+  {k:"mos",  label:"Method of Statement (MOS)", t:"r", multi:true, hint:"Work method and sequence of activities."},
+  {k:"hirarc",label:"HIRARC", t:"r", multi:true, hint:"Hazard identification, risk assessment and risk control."},
+  {k:"timeline",label:"Project Timeline", t:"r", multi:false, hint:"Schedule of work activities."},
+  {k:"safetycert",label:"Safety Personnel Certificate", t:"c", multi:true, hint:"Required when Total Workers is 5 or more."},
+  {k:"drawing",label:"Drawing Layout (*if applicable)", t:"o", multi:false, hint:"Site / work area layout drawing."},
+  {k:"machinecert",label:"Machine Certificate (*if applicable)", t:"o", multi:true, hint:"Inspection / calibration certificate."},
+  {k:"sds",label:"Safety Data Sheet (SDS) (*if applicable)", t:"o", multi:true, hint:"For each chemical to be used."}
 ];
-const files = {};
+const files = {};            // doc key -> array of File
+DOCS.forEach(d=>files[d.k]=[]);
 const $ = id => document.getElementById(id);
 
 
+const big = ()=> (parseInt($("workers").value,10)||0) >= 5;
+
 /* ---- upload cards ---- */
-DOCS.forEach(d=>{
+const fileId = f => f.name+"|"+f.size;
+function renderDoc(d){
+  const el = $("doc_"+d.k), list = el.querySelector(".flist");
+  list.innerHTML = "";
+  files[d.k].forEach((f,i)=>{
+    const row = document.createElement("div"); row.className="fitem";
+    const nm = document.createElement("span"); nm.textContent = f.name+" ("+(f.size/1048576).toFixed(2)+" MB)";
+    const rm = document.createElement("button"); rm.type="button"; rm.textContent="Remove";
+    rm.onclick = ()=>{ files[d.k].splice(i,1); renderDoc(d); };
+    row.append(nm,rm); list.appendChild(row);
+  });
+  el.classList.toggle("has", files[d.k].length>0);
+  if(files[d.k].length) { el.classList.remove("invalid"); el.querySelector(".msg").style.display="none"; }
+  el.querySelector(".fname").textContent = files[d.k].length ? "" : "There is nothing attached.";
+  el.querySelector(".up").textContent = files[d.k].length && !d.multi ? "Replace file" : "Attach file";
+  updateCount();
+}
+DOCS.forEach((d,n)=>{
   const el = document.createElement("div");
   el.className = "doc field"; el.id = "doc_"+d.k;
   const bt = d.t==="r"?'<span class="badge r">Required</span>':d.t==="c"?'<span class="badge c">Conditional</span>':'<span class="badge o">Optional</span>';
-  el.innerHTML = `<h4>${d.label}${bt}</h4><p class="hint">${d.hint}</p>
-    <div class="pick"><button type="button" class="btn up">Choose file</button><span class="fname">No file selected</span><button type="button" class="btn rm" hidden>Remove</button></div>
-    <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"><div class="msg"></div>`;
+  el.innerHTML = `<h4>${n+1}. ${d.label}${bt}</h4><p class="mode">${d.multi?"Multiple files allowed":"Single file"}</p><p class="hint">${d.hint}</p>
+    <div class="flist"></div>
+    <div class="pick"><button type="button" class="btn up">Attach file</button><span class="fname"></span></div>
+    <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"${d.multi?" multiple":""}><div class="msg"></div>`;
   $("docs").appendChild(el);
-  const inp = el.querySelector("input"), msg = el.querySelector(".msg");
-  const set = f => {
-    msg.textContent=""; el.classList.remove("invalid");
-    if(!f) return;
-    const ext = f.name.split(".").pop().toLowerCase();
-    if(!ALLOWED.includes(ext)){ showDocErr(el,"File type not allowed."); return; }
-    if(f.size > MAX_MB*1048576){ showDocErr(el,"File exceeds "+MAX_MB+" MB. Please reduce the file size."); return; }
-    files[d.k]=f; el.classList.add("has");
-    el.querySelector(".fname").textContent = f.name+" ("+(f.size/1048576).toFixed(2)+" MB)";
-    el.querySelector(".rm").hidden=false;
+  const inp = el.querySelector("input");
+  const add = fl => {
+    const errs=[];
+    for(const f of fl){
+      const ext = f.name.split(".").pop().toLowerCase();
+      if(!ALLOWED.includes(ext)){ errs.push(f.name+": file type not allowed."); continue; }
+      if(f.size > MAX_MB*1048576){ errs.push(f.name+": exceeds "+MAX_MB+" MB. Please reduce the file size."); continue; }
+      if(!d.multi){ files[d.k]=[f]; break; }
+      if(files[d.k].some(x=>fileId(x)===fileId(f))) continue;
+      if(files[d.k].length>=MAX_FILES_PER_DOC){ errs.push("Maximum "+MAX_FILES_PER_DOC+" files for this document."); break; }
+      files[d.k].push(f);
+    }
+    renderDoc(d);
+    if(errs.length) showDocErr(el,errs.join(" ")); else { el.querySelector(".msg").style.display="none"; }
   };
   el.querySelector(".up").onclick = ()=>inp.click();
-  inp.onchange = ()=>{ set(inp.files[0]); inp.value=""; };
-  el.querySelector(".rm").onclick = ()=>{ delete files[d.k]; el.classList.remove("has"); el.querySelector(".fname").textContent="No file selected"; el.querySelector(".rm").hidden=true; };
+  inp.onchange = ()=>{ add([...inp.files]); inp.value=""; };
   ["dragenter","dragover"].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();el.classList.add("drag")}));
   ["dragleave","drop"].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();el.classList.remove("drag")}));
-  el.addEventListener("drop",e=>set(e.dataTransfer.files[0]));
+  el.addEventListener("drop",e=>add([...e.dataTransfer.files]));
+  renderDoc(d);
 });
-function showDocErr(el,t){ el.classList.add("invalid"); el.querySelector(".msg").textContent=t; el.classList.add("invalid"); el.querySelector(".msg").style.display="block"; }
+function showDocErr(el,t){ el.classList.add("invalid"); const m=el.querySelector(".msg"); m.textContent=t; m.style.display="block"; }
+function neededDocs(){ return ["mos","hirarc","timeline"].concat(big()?["safetycert"]:[]); }
+function updateCount(){
+  const need = neededDocs(), done = need.filter(k=>files[k].length).length;
+  const el = $("upCount"); if(!el) return;
+  el.style.color = done>=need.length ? "var(--ok)" : "var(--err)";
+  el.textContent = "Uploaded: "+done+" / "+need.length+" (Safety Personnel Certificate is required for 5 or more workers; Drawing Layout, Machine Certificate, Safety Data Sheet only if applicable)";
+}
 
 /* ---- dynamic rows ---- */
 function esc(s){return String(s).replace(/"/g,"&quot;")}
@@ -233,7 +263,7 @@ function addRow(kind){
     r.className="row sc";
     r.innerHTML=`<input type="text" placeholder="Company Name" data-f="company"><input type="text" placeholder="Safety Full Name" data-f="safetyName"><input type="text" placeholder="DOSH Registration No." data-f="dosh"><button type="button" class="btn del" title="Remove">&times;</button>`;
   } else {
-    const n={machine:["Machine Name","Quantity"],equipment:["Equipment Name","Quantity"],chemical:["Chemical Name","Quantity / Volume"]}[kind];
+    const n={machine:["Machine name","Insert quantity, e.g. 1"],equipment:["Equipment name","Insert quantity, e.g. 1"],chemical:["Chemical Name","Insert quantity, e.g. 2pail (25liter/unit)"]}[kind];
     r.className="row";
     r.innerHTML=`<input type="text" placeholder="${n[0]}" data-f="name"><input type="text" placeholder="${n[1]}" data-f="qty"><button type="button" class="btn del" title="Remove">&times;</button>`;
   }
@@ -247,7 +277,6 @@ function collect(kind){
 }
 
 /* ---- conditional (>= 5 workers) ---- */
-const big = ()=> (parseInt($("workers").value,10)||0) >= 5;
 function updateCond(){
   const b=big();
   document.querySelectorAll(".cond").forEach(c=>c.style.display=b?"inline":"none");
@@ -255,6 +284,7 @@ function updateCond(){
                                 : "Optional while Total Workers is below 5. Becomes mandatory at 5 or more.";
   const cert=$("doc_safetycert").querySelector(".badge");
   cert.textContent=b?"Required":"Conditional"; cert.className="badge "+(b?"r":"c");
+  updateCount();
 }
 $("workers").addEventListener("input",updateCond);
 
@@ -275,9 +305,8 @@ function validate(){
   const anyPermit=[...document.querySelectorAll("#permits input")].some(c=>c.checked);
   const pf=$("permitField"); if(mark(pf,!anyPermit)) bad.push(pf);
   document.querySelectorAll("[data-cond]").forEach(i=>{ const f=i.closest(".field"); if(mark(f,big()&&!i.value.trim())) bad.push(f); });
-  const need=["mos","hirarc","timeline"]; if(big()) need.push("safetycert");
-  DOCS.forEach(d=>{ const el=$("doc_"+d.k); if(need.includes(d.k)&&!files[d.k]){ showDocErr(el,"This document is required."); bad.push(el);} else if(!el.classList.contains("invalid")||files[d.k]){ if(files[d.k]||!need.includes(d.k)){el.classList.remove("invalid"); el.querySelector(".msg").style.display="none";} } });
-  if(mark($("decl").closest(".field"),!$("decl").checked)) bad.push($("decl").closest(".field"));
+  const need=neededDocs();
+  DOCS.forEach(d=>{ const el=$("doc_"+d.k); if(need.includes(d.k)&&!files[d.k].length){ showDocErr(el,"This document is required."); bad.push(el);} });
   return bad;
 }
 document.querySelectorAll("input,select,textarea").forEach(i=>i.addEventListener("input",()=>i.closest(".field")?.classList.remove("invalid")));
@@ -340,15 +369,16 @@ $("f").addEventListener("submit",async e=>{
   };
   try{
     const fd = new FormData();
-    const list = Object.keys(files); let total = 0;
-    for(let i=0;i<list.length;i++){
-      const k=list[i], d=DOCS.find(x=>x.k===k);
-      setProg(5+Math.round(60*i/list.length),"Compressing "+d.label+" ("+(i+1)+"/"+list.length+")...");
-      const p = await prepare(files[k]);
-      if(p.blob.size > MAX_SERVER_MB*1048576) throw new Error(d.label+" is still larger than "+MAX_SERVER_MB+" MB after compression. Please reduce the file size.");
+    const all = []; DOCS.forEach(d=>files[d.k].forEach((f,i)=>all.push({d,i,f})));
+    let total = 0;
+    for(let n=0;n<all.length;n++){
+      const {d,i,f} = all[n];
+      setProg(5+Math.round(60*n/all.length),"Compressing "+d.label+" ("+(n+1)+"/"+all.length+")...");
+      const p = await prepare(f);
+      if(p.blob.size > MAX_SERVER_MB*1048576) throw new Error(f.name+" is still larger than "+MAX_SERVER_MB+" MB after compression. Please reduce the file size.");
       total += p.blob.size;
-      fd.append("f_"+k, p.blob, p.name);
-      fd.append("m_"+k, JSON.stringify({name:p.name,type:p.type,encoding:p.encoding,origSize:p.origSize}));
+      fd.append("f_"+d.k+"_"+i, p.blob, p.name);
+      fd.append("m_"+d.k+"_"+i, JSON.stringify({name:p.name,type:p.type,encoding:p.encoding,origSize:p.origSize}));
     }
     if(total > 20*1048576) throw new Error("Documents are too large in total (20 MB maximum). Please reduce the file sizes.");
     fd.append("data", JSON.stringify(data));
@@ -368,6 +398,7 @@ $("f").addEventListener("submit",async e=>{
     $("status").textContent="Submission failed: "+err.message+". Please try again; if it keeps failing, contact the facility team.";
   }
 });
+$("cancelBtn").onclick=()=>{ if(confirm("Discard this application and clear the form?")) location.reload(); };
 updateCond();
 </script>
 </body>
