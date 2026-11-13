@@ -41,6 +41,10 @@ const GROUPS = [
     // A separate standalone page (public/fire-alarm-sim.html), opened with a normal link.
     { href: '/fire-alarm-sim.html', icon: 'ti-alarm-smoke', label: 'Fire Alarm Simulator' },
   ] },
+  { id: 'permit', icon: 'ti-file-certificate', label: 'Vendor Permit', items: [
+    // A separate standalone page (public/vendor-permit.html). Vendors can open the same link directly; files go to Google Drive.
+    { href: '/vendor-permit.html', icon: 'ti-file-certificate', label: 'Work Permit Application' },
+  ] },
   { id: 'admin', icon: 'ti-settings', label: 'Admin', items: [
     { to: '/admin', icon: 'ti-home-cog', label: 'Admin home', adminOnly: true },
     { to: '/admin/areas', icon: 'ti-building', label: 'Areas', adminOnly: true },

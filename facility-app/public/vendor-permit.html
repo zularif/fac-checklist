@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>Vendor Work Permit Application</title>
+<style>
+:root{--navy:#14213d;--navy2:#1f3159;--amber:#fca311;--bg:#f3f4f6;--card:#fff;--line:#d9dde3;--txt:#1b2230;--mut:#667085;--err:#c62828;--ok:#2e7d32;--r:8px}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 "Segoe UI",system-ui,-apple-system,Arial,sans-serif;color:var(--txt);background:#fff}
+header.top{background:var(--navy);color:#fff;padding:14px 20px;border-bottom:4px solid var(--amber)}
+header.top h1{margin:0;font-size:20px;letter-spacing:.3px}
+header.top p{margin:2px 0 0;color:#cbd5e1;font-size:12.5px}
+main{max-width:1050px;margin:0 auto;padding:16px}
+section.part{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);margin-bottom:16px;overflow:hidden}
+section.part>h2{margin:0;background:var(--navy);color:#fff;font-size:15px;padding:10px 14px;display:flex;gap:10px;align-items:center}
+section.part>h2 .tag{background:var(--amber);color:var(--navy);font-weight:700;border-radius:4px;padding:1px 8px;font-size:12px}
+.body{padding:14px;background:#fff;margin:10px;border-radius:6px;border:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px 12px}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}.c12{grid-column:span 12}
+@media(max-width:860px){.c3,.c4{grid-column:span 6}}
+@media(max-width:560px){.c3,.c4,.c6{grid-column:span 12}}
+label.l{display:block;font-size:11.5px;font-weight:700;color:var(--navy2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+label.l .req{color:var(--err)}
+label.l .cond{color:var(--amber);display:none}
+input[type=text],input[type=tel],input[type=number],input[type=date],select,textarea{width:100%;padding:8px 10px;border:1px solid #b9c0cc;border-radius:6px;font:inherit;background:#fff;color:var(--txt)}
+textarea{min-height:70px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--amber);border-color:var(--amber)}
+.field.invalid input,.field.invalid select,.field.invalid textarea{border-color:var(--err);background:#fff6f6}
+.msg{color:var(--err);font-size:12px;margin-top:2px;display:none}
+.field.invalid .msg{display:block}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0}
+.chip span{display:inline-block;padding:7px 12px;border:1px solid #b9c0cc;border-radius:20px;cursor:pointer;background:#fff;font-size:13px;user-select:none}
+.chip span b{color:var(--navy2)}
+.chip input:checked+span{background:var(--navy);color:#fff;border-color:var(--navy)}
+.chip input:checked+span b{color:var(--amber)}
+.chip input:focus-visible+span{outline:2px solid var(--amber)}
+.sub{font-weight:700;color:var(--navy);margin:2px 0 8px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid var(--amber);padding-left:8px}
+.row{display:grid;grid-template-columns:1fr 150px 40px;gap:8px;margin-bottom:8px}
+.row.sc{grid-template-columns:1fr 1fr 1fr 40px}
+@media(max-width:620px){.row,.row.sc{grid-template-columns:1fr 40px}.row>*:nth-child(1),.row.sc>*:nth-child(1){grid-column:1/-1}.row>input:nth-child(2){grid-column:1}.row.sc>*:nth-child(2),.row.sc>*:nth-child(3){grid-column:1/-1}}
+button{font:inherit;cursor:pointer}
+.btn{border:0;border-radius:6px;padding:7px 12px;font-weight:600}
+.btn.add{background:var(--amber);color:var(--navy)}
+.btn.del{background:#eceff3;color:var(--err);width:40px;font-size:18px;padding:0}
+.btn.primary{background:var(--navy);color:#fff;padding:12px 28px;font-size:15px;border-bottom:3px solid var(--amber)}
+.btn.primary:disabled{opacity:.6;cursor:wait}
+.note{background:#fff7e6;border:1px solid #ffd591;border-left:4px solid var(--amber);padding:8px 12px;border-radius:6px;margin-bottom:12px;font-size:13px}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.docs{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.doc{border:2px dashed #b9c0cc;border-radius:8px;padding:12px;background:#fafbfc;position:relative}
+.doc.drag{border-color:var(--amber);background:#fff9ec}
+.doc.invalid{border-color:var(--err);background:#fff6f6}
+.doc.has{border-style:solid;border-color:var(--ok);background:#f4fbf5}
+.doc h4{margin:0 0 2px;font-size:13.5px;color:var(--navy)}
+.badge{font-size:10.5px;font-weight:700;border-radius:10px;padding:1px 8px;margin-left:6px;vertical-align:middle}
+.badge.r{background:#fde8e8;color:var(--err)}.badge.o{background:#e8eef7;color:var(--navy2)}.badge.c{background:#fff1d6;color:#9a6200}
+.doc .hint{font-size:12px;color:var(--mut);margin:0 0 8px}
+.doc .pick{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.doc .fname{font-size:12.5px;word-break:break-all}
+.doc input[type=file]{display:none}
+.doc .btn.up{background:var(--navy);color:#fff}
+.doc .btn.rm{background:none;color:var(--err);text-decoration:underline;padding:0}
+.decl{display:flex;gap:10px;align-items:flex-start}
+.decl input{margin-top:3px;width:18px;height:18px}
+#status{margin:12px 0;font-weight:600}
+.prog{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-top:6px;display:none}
+.prog>div{height:100%;width:0;background:var(--amber);transition:width .2s}
+.success{background:#f1faf2;border:1px solid #a5d6a7;border-left:5px solid var(--ok);padding:16px;border-radius:8px}
+.success h3{margin:0 0 6px;color:var(--ok)}
+.warn{background:#fdecea;border:1px solid #f5c2c0;padding:10px 12px;border-radius:6px;color:var(--err);margin-bottom:12px;display:none}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Vendor Work Permit Application</h1>
+  <p>Facility Management &middot; All supporting documents are stored in the company Google Drive</p>
+  <p style="margin-top:6px"><a href="/" style="color:#fca311;font-size:12.5px">&larr; Back to Facility Maintenance app</a></p>
+</header>
+
+<main>
+<div class="warn" id="cfgWarn">Setup incomplete: set <code>SCRIPT_URL</code> in this file to your Google Apps Script web app URL. Until then, submissions will not be saved.</div>
+
+<form id="f" novalidate>
+
+<!-- PART B -->
+<section class="part"><h2><span class="tag">PART B</span> Permit Requestor (PR) Details</h2>
+<div class="body"><div class="grid">
+  <div class="field c6"><label class="l" for="reqName">Requestor Name <span class="req">*</span></label><input type="text" id="reqName" data-req autocomplete="name"><div class="msg">Please enter the requestor name.</div></div>
+  <div class="field c6"><label class="l" for="reqPos">Requestor Position <span class="req">*</span></label><input type="text" id="reqPos" data-req><div class="msg">Please enter the position.</div></div>
+  <div class="field c6"><label class="l" for="reqCo">Requestor Company <span class="req">*</span></label><input type="text" id="reqCo" data-req autocomplete="organization"><div class="msg">Please enter the company.</div></div>
+  <div class="field c6"><label class="l" for="reqTel">Requestor Contact No. <span class="req">*</span></label><input type="tel" id="reqTel" data-req data-tel placeholder="e.g. 012-3456789" autocomplete="tel"><div class="msg">Enter a valid phone number (8-15 digits).</div></div>
+</div></div></section>
+
+<!-- PART C -->
+<section class="part"><h2><span class="tag">PART C</span> Project Details</h2>
+<div class="body"><div class="grid">
+  <div class="field c4"><label class="l" for="reqType">Request Type <span class="req">*</span></label>
+    <select id="reqType" data-req><option value="">Select...</option><option>New</option><option>Renewal</option><option>Extension</option><option>Revision</option></select><div class="msg">Select a request type.</div></div>
+  <div class="field c4"><label class="l" for="plant">Plant <span class="req">*</span></label>
+    <select id="plant" data-req><option value="">Select...</option><option>P1</option><option>P2</option></select><div class="msg">Select a plant.</div></div>
+  <div class="field c4"><label class="l" for="po">PO Number</label><input type="text" id="po"></div>
+  <div class="field c12"><label class="l" for="title">Project / Activity Title <span class="req">*</span></label><input type="text" id="title" data-req><div class="msg">Please enter the project / activity title.</div></div>
+  <div class="field c12"><label class="l" for="desc">Work Description <span class="req">*</span></label><textarea id="desc" data-req></textarea><div class="msg">Please describe the work.</div></div>
+  <div class="field c3"><label class="l" for="workers">Total Workers <span class="req">*</span></label><input type="number" id="workers" min="1" step="1" data-req><div class="msg">Enter number of workers (1 or more).</div></div>
+  <div class="field c3"><label class="l" for="start">Start Date <span class="req">*</span></label><input type="date" id="start" data-req><div class="msg">Select a start date.</div></div>
+  <div class="field c3"><label class="l" for="end">Target Completion Date <span class="req">*</span></label><input type="date" id="end" data-req><div class="msg" id="endMsg">Select a completion date.</div></div>
+  <div class="field c3"><label class="l" for="cat">Work Category</label><input type="text" id="cat" list="catList" placeholder="Type to search..."><datalist id="catList"><option>Civil / Building</option><option>Mechanical</option><option>Electrical</option><option>Plumbing &amp; Piping</option><option>HVAC</option><option>Fire Protection</option><option>Painting / Coating</option><option>Roofing</option><option>Cleaning</option><option>Installation / Commissioning</option><option>Others</option></datalist></div>
+  <div class="field c12"><label class="l" for="loc">Work Location</label><input type="text" id="loc" list="locList" placeholder="Type to search or enter a location..."><datalist id="locList"><option>Production Area</option><option>Warehouse</option><option>Roof</option><option>Utility Room</option><option>Chiller Plant</option><option>Electrical Room</option><option>Car Park</option><option>Outdoor / External</option><option>Office Area</option></datalist></div>
+</div>
+<div class="divider"></div>
+<div class="field" id="permitField"><label class="l">Applicable Permit <span class="req">*</span> <span style="text-transform:none;font-weight:400;color:var(--mut)">(select all that apply)</span></label>
+<div class="chips" id="permits">
+  <label class="chip"><input type="checkbox" value="GEN"><span><b>GEN</b> &ndash; General Permit</span></label>
+  <label class="chip"><input type="checkbox" value="WAH"><span><b>WAH</b> &ndash; Work at Height</span></label>
+  <label class="chip"><input type="checkbox" value="HW"><span><b>HW</b> &ndash; Hot Work</span></label>
+  <label class="chip"><input type="checkbox" value="LP"><span><b>LP</b> &ndash; Lifting</span></label>
+  <label class="chip"><input type="checkbox" value="CS"><span><b>CS</b> &ndash; Confined Space</span></label>
+  <label class="chip"><input type="checkbox" value="EXC"><span><b>EXC</b> &ndash; Excavation</span></label>
+  <label class="chip"><input type="checkbox" value="LOTO"><span><b>LOTO</b> &ndash; Energy Isolation</span></label>
+</div><div class="msg">Select at least one permit.</div></div>
+</div></section>
+
+<!-- PART D -->
+<section class="part"><h2><span class="tag">PART D</span> Machine / Equipment / Chemical Details</h2>
+<div class="body">
+  <div class="sub"><span>A. Machine</span><button type="button" class="btn add" data-add="machine">+ Add row</button></div>
+  <div id="machine"></div>
+  <div class="divider"></div>
+  <div class="sub"><span>B. Equipment</span><button type="button" class="btn add" data-add="equipment">+ Add row</button></div>
+  <div id="equipment"></div>
+  <div class="divider"></div>
+  <div class="sub"><span>C. Chemical</span><button type="button" class="btn add" data-add="chemical">+ Add row</button></div>
+  <div id="chemical"></div>
+</div></section>
+
+<!-- PART E -->
+<section class="part"><h2><span class="tag">PART E</span> Safety Personnel Details</h2>
+<div class="body">
+  <div class="note" id="safetyNote">Optional while Total Workers is below 5. Becomes mandatory at 5 or more.</div>
+  <div class="sub"><span>Main Contractor Safety Personnel</span></div>
+  <div class="grid">
+    <div class="field c4"><label class="l" for="mcName">Maincon Safety Name <span class="req cond">*</span></label><input type="text" id="mcName" data-cond><div class="msg">Required for 5 or more workers.</div></div>
+    <div class="field c4"><label class="l" for="mcCo">Maincon Company Name <span class="req cond">*</span></label><input type="text" id="mcCo" data-cond><div class="msg">Required for 5 or more workers.</div></div>
+    <div class="field c4"><label class="l" for="mcDosh">Maincon Registration DOSH <span class="req cond">*</span></label><input type="text" id="mcDosh" data-cond><div class="msg">Required for 5 or more workers.</div></div>
+  </div>
+  <div class="divider"></div>
+  <div class="sub"><span>Sub-Contractor Details</span><button type="button" class="btn add" data-add="sub">+ Add sub-contractor</button></div>
+  <div id="sub"></div>
+</div></section>
+
+<!-- PART F -->
+<section class="part"><h2><span class="tag">PART F</span> Supporting Documents</h2>
+<div class="body">
+  <p style="margin:0 0 10px;color:var(--mut);font-size:12.5px">Accepted: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG &middot; Max 8 MB per file &middot; Files are saved to Google Drive on submission.</p>
+  <div class="docs" id="docs"></div>
+</div></section>
+
+<!-- Declaration -->
+<section class="part"><h2>Declaration</h2>
+<div class="body">
+  <div class="field"><label class="decl"><input type="checkbox" id="decl"><span>I declare that the information and documents provided are true and complete, and that all work will comply with the facility's safety rules and applicable DOSH regulations.</span></label><div class="msg">You must accept the declaration.</div></div>
+</div></section>
+
+<div id="status" role="status"></div>
+<div class="prog" id="prog"><div></div></div>
+<p><button type="submit" class="btn primary" id="submitBtn">Submit Application</button></p>
+</form>
+<div id="done"></div>
+</main>
+
+<script>
+/* ========= CONFIG ========= */
+const SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+const SHARED_KEY = "change-me";           // must match SHARED_KEY in Code.gs
+const MAX_MB = 8;
+const ALLOWED = ["pdf","doc","docx","xls","xlsx","jpg","jpeg","png"];
+/* ========================== */
+
+const DOCS = [
+  {k:"mos",  label:"Method of Statement (MOS)", t:"r", hint:"Work method and sequence of activities."},
+  {k:"hirarc",label:"HIRARC", t:"r", hint:"Hazard identification, risk assessment and risk control."},
+  {k:"timeline",label:"Project Timeline", t:"r", hint:"Schedule of work activities."},
+  {k:"safetycert",label:"Safety Personnel Certificate", t:"c", hint:"Required when Total Workers is 5 or more."},
+  {k:"drawing",label:"Drawing Layout", t:"o", hint:"Site / work area layout drawing."},
+  {k:"machinecert",label:"Machine Certificate", t:"o", hint:"Inspection / calibration certificate."},
+  {k:"sds",label:"Safety Data Sheet (SDS)", t:"o", hint:"For each chemical to be used."}
+];
+const files = {};
+const $ = id => document.getElementById(id);
+
+if (SCRIPT_URL.startsWith("PASTE")) $("cfgWarn").style.display = "block";
+
+/* ---- upload cards ---- */
+DOCS.forEach(d=>{
+  const el = document.createElement("div");
+  el.className = "doc field"; el.id = "doc_"+d.k;
+  const bt = d.t==="r"?'<span class="badge r">Required</span>':d.t==="c"?'<span class="badge c">Conditional</span>':'<span class="badge o">Optional</span>';
+  el.innerHTML = `<h4>${d.label}${bt}</h4><p class="hint">${d.hint}</p>
+    <div class="pick"><button type="button" class="btn up">Choose file</button><span class="fname">No file selected</span><button type="button" class="btn rm" hidden>Remove</button></div>
+    <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"><div class="msg"></div>`;
+  $("docs").appendChild(el);
+  const inp = el.querySelector("input"), msg = el.querySelector(".msg");
+  const set = f => {
+    msg.textContent=""; el.classList.remove("invalid");
+    if(!f) return;
+    const ext = f.name.split(".").pop().toLowerCase();
+    if(!ALLOWED.includes(ext)){ showDocErr(el,"File type not allowed."); return; }
+    if(f.size > MAX_MB*1048576){ showDocErr(el,"File exceeds "+MAX_MB+" MB."); return; }
+    files[d.k]=f; el.classList.add("has");
+    el.querySelector(".fname").textContent = f.name+" ("+(f.size/1048576).toFixed(2)+" MB)";
+    el.querySelector(".rm").hidden=false;
+  };
+  el.querySelector(".up").onclick = ()=>inp.click();
+  inp.onchange = ()=>{ set(inp.files[0]); inp.value=""; };
+  el.querySelector(".rm").onclick = ()=>{ delete files[d.k]; el.classList.remove("has"); el.querySelector(".fname").textContent="No file selected"; el.querySelector(".rm").hidden=true; };
+  ["dragenter","dragover"].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();el.classList.add("drag")}));
+  ["dragleave","drop"].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();el.classList.remove("drag")}));
+  el.addEventListener("drop",e=>set(e.dataTransfer.files[0]));
+});
+function showDocErr(el,t){ el.classList.add("invalid"); el.querySelector(".msg").textContent=t; el.classList.add("invalid"); el.querySelector(".msg").style.display="block"; }
+
+/* ---- dynamic rows ---- */
+function esc(s){return String(s).replace(/"/g,"&quot;")}
+function addRow(kind){
+  const box=$(kind), r=document.createElement("div");
+  if(kind==="sub"){
+    r.className="row sc";
+    r.innerHTML=`<input type="text" placeholder="Company Name" data-f="company"><input type="text" placeholder="Safety Full Name" data-f="safetyName"><input type="text" placeholder="DOSH Registration No." data-f="dosh"><button type="button" class="btn del" title="Remove">&times;</button>`;
+  } else {
+    const n={machine:["Machine Name","Quantity"],equipment:["Equipment Name","Quantity"],chemical:["Chemical Name","Quantity / Volume"]}[kind];
+    r.className="row";
+    r.innerHTML=`<input type="text" placeholder="${n[0]}" data-f="name"><input type="text" placeholder="${n[1]}" data-f="qty"><button type="button" class="btn del" title="Remove">&times;</button>`;
+  }
+  r.querySelector(".del").onclick=()=>{ if(box.children.length>1) r.remove(); else r.querySelectorAll("input").forEach(i=>i.value=""); };
+  box.appendChild(r);
+}
+document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>addRow(b.dataset.add));
+["machine","equipment","chemical","sub"].forEach(addRow);
+function collect(kind){
+  return [...$(kind).children].map(r=>{const o={};r.querySelectorAll("input").forEach(i=>o[i.dataset.f]=i.value.trim());return o;}).filter(o=>Object.values(o).some(v=>v));
+}
+
+/* ---- conditional (>= 5 workers) ---- */
+const big = ()=> (parseInt($("workers").value,10)||0) >= 5;
+function updateCond(){
+  const b=big();
+  document.querySelectorAll(".cond").forEach(c=>c.style.display=b?"inline":"none");
+  $("safetyNote").innerHTML = b ? "<b>Total Workers is 5 or more:</b> Main Contractor Safety Personnel details and the Safety Personnel Certificate are now <b>mandatory</b>."
+                                : "Optional while Total Workers is below 5. Becomes mandatory at 5 or more.";
+  const cert=$("doc_safetycert").querySelector(".badge");
+  cert.textContent=b?"Required":"Conditional"; cert.className="badge "+(b?"r":"c");
+}
+$("workers").addEventListener("input",updateCond);
+
+/* ---- validation ---- */
+function mark(field,bad,text){ field.classList.toggle("invalid",bad); if(bad&&text) { const m=field.querySelector(".msg"); if(m) m.textContent=text; } return bad; }
+function validate(){
+  let bad=[];
+  document.querySelectorAll("[data-req]").forEach(i=>{
+    const f=i.closest(".field"); let isBad=!i.value.trim();
+    if(!isBad && i.dataset.tel) isBad = !/^[+()\-\s\d]{8,18}$/.test(i.value) || i.value.replace(/\D/g,"").length<8;
+    if(!isBad && i.id==="workers") isBad = !(parseInt(i.value,10)>=1);
+    if(mark(f,isBad)) bad.push(f);
+  });
+  if($("start").value && $("end").value && $("end").value<$("start").value){
+    const f=$("end").closest(".field"); mark(f,true,"Completion date cannot be before the start date."); bad.push(f);
+  } else if($("end").value){ $("endMsg").textContent="Select a completion date."; }
+  const anyPermit=[...document.querySelectorAll("#permits input")].some(c=>c.checked);
+  const pf=$("permitField"); if(mark(pf,!anyPermit)) bad.push(pf);
+  document.querySelectorAll("[data-cond]").forEach(i=>{ const f=i.closest(".field"); if(mark(f,big()&&!i.value.trim())) bad.push(f); });
+  const need=["mos","hirarc","timeline"]; if(big()) need.push("safetycert");
+  DOCS.forEach(d=>{ const el=$("doc_"+d.k); if(need.includes(d.k)&&!files[d.k]){ showDocErr(el,"This document is required."); bad.push(el);} else if(!el.classList.contains("invalid")||files[d.k]){ if(files[d.k]||!need.includes(d.k)){el.classList.remove("invalid"); el.querySelector(".msg").style.display="none";} } });
+  if(mark($("decl").closest(".field"),!$("decl").checked)) bad.push($("decl").closest(".field"));
+  return bad;
+}
+document.querySelectorAll("input,select,textarea").forEach(i=>i.addEventListener("input",()=>i.closest(".field")?.classList.remove("invalid")));
+
+/* ---- network ---- */
+async function post(obj){
+  obj.key=SHARED_KEY;
+  const r=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify(obj)});
+  const j=await r.json();
+  if(!j.ok) throw new Error(j.error||"Server error");
+  return j;
+}
+function toB64(file){
+  return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(",")[1]);fr.onerror=rej;fr.readAsDataURL(file);});
+}
+function setProg(p,t){ $("prog").style.display="block"; $("prog").firstElementChild.style.width=p+"%"; $("status").textContent=t; }
+
+/* ---- submit ---- */
+$("f").addEventListener("submit",async e=>{
+  e.preventDefault();
+  $("status").textContent="";
+  const bad=validate();
+  if(bad.length){ $("status").style.color="var(--err)"; $("status").textContent="Please fix "+bad.length+" highlighted item(s) before submitting."; bad[0].scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  if(SCRIPT_URL.startsWith("PASTE")){ $("status").style.color="var(--err)"; $("status").textContent="Setup incomplete: SCRIPT_URL is not configured."; return; }
+  $("status").style.color="var(--navy)";
+  const btn=$("submitBtn"); btn.disabled=true;
+  const data={
+    requestor:{name:$("reqName").value.trim(),position:$("reqPos").value.trim(),company:$("reqCo").value.trim(),contact:$("reqTel").value.trim()},
+    project:{requestType:$("reqType").value,plant:$("plant").value,po:$("po").value.trim(),title:$("title").value.trim(),description:$("desc").value.trim(),
+      totalWorkers:parseInt($("workers").value,10),startDate:$("start").value,targetCompletion:$("end").value,category:$("cat").value.trim(),location:$("loc").value.trim(),
+      permits:[...document.querySelectorAll("#permits input:checked")].map(c=>c.value)},
+    machines:collect("machine"),equipment:collect("equipment"),chemicals:collect("chemical"),
+    mainconSafety:{name:$("mcName").value.trim(),company:$("mcCo").value.trim(),dosh:$("mcDosh").value.trim()},
+    subcontractors:collect("sub"),
+    submittedAt:new Date().toISOString()
+  };
+  try{
+    setProg(3,"Creating Drive folder...");
+    const c=await post({action:"create",company:data.requestor.company,title:data.project.title});
+    const list=Object.keys(files); let n=0;
+    for(const k of list){
+      const d=DOCS.find(x=>x.k===k);
+      setProg(5+Math.round(85*n/Math.max(list.length,1)),"Uploading "+d.label+" ("+(n+1)+"/"+list.length+")...");
+      await post({action:"upload",folderId:c.folderId,docKey:k,label:d.label,name:files[k].name,mime:files[k].type||"application/octet-stream",data:await toB64(files[k])});
+      n++;
+    }
+    setProg(94,"Saving application details...");
+    const fin=await post({action:"finish",folderId:c.folderId,ref:c.ref,data:data,fileNames:list.map(k=>({doc:k,name:files[k].name}))});
+    setProg(100,"");
+    $("f").style.display="none";
+    $("done").innerHTML=`<div class="success"><h3>Application submitted</h3><p>Your reference number is <b>${c.ref}</b>. Please quote it when contacting the facility team.</p><p>All documents were saved to the company Google Drive.</p></div>`;
+    window.scrollTo({top:0,behavior:"smooth"});
+  }catch(err){
+    btn.disabled=false; $("prog").style.display="none";
+    $("status").style.color="var(--err)";
+    $("status").textContent="Submission failed: "+err.message+". Please try again; if it keeps failing, contact the facility team.";
+  }
+});
+updateCond();
+</script>
+</body>
+</html>
