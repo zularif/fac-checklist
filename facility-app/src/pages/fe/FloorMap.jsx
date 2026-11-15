@@ -587,7 +587,12 @@ export default function FloorMap() {
                   }}
                 >
                   <i className="ti ti-fire-extinguisher" aria-hidden="true" />
-                  {draggingId === u.id && <span className="fe-drag-chip">{u.fe_code}</span>}
+                  {draggingId === u.id && (
+                    <span className="fe-drag-chip">
+                      <b>{u.fe_code}</b>
+                      <span className="fe-drag-loc">{u.location_desc || 'No location set'}</span>
+                    </span>
+                  )}
                   {showLabels && draggingId !== u.id && (
                     <span className="fe-pin-label" onClick={(e) => e.stopPropagation()}>
                       <span className="fe-lbl-code">{u.fe_code}</span>
