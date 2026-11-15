@@ -129,10 +129,11 @@ async function handleFile(request, env, url) {
   }
   return new Response(value, {
     headers: {
-      'Content-Type': metadata?.contentType || 'application/octet-stream',
-      'Cache-Control': BUCKETS[m[1]].publicRead ? 'public, max-age=300' : 'private, max-age=300',
+      // Files the vendor's browser zipped are sent as plain bytes; the staff page unzips them itself.
+      // (A Content-Encoding header lets proxies and browsers alter the bytes, which corrupts downloads.)
+      'Content-Type': metadata?.encoding === 'gzip' ? 'application/octet-stream' : metadata?.contentType || 'application/octet-stream',
+      'Cache-Control': (BUCKETS[m[1]].publicRead ? 'public, max-age=300' : 'private, max-age=300') + ', no-transform',
       'X-Content-Type-Options': 'nosniff',
-      ...(metadata?.encoding === 'gzip' ? { 'Content-Encoding': 'gzip' } : {}),
     },
   })
 }

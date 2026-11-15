@@ -14,11 +14,20 @@ async function fetchFileBlob(file) {
   const res = await fetch('/files/permits/' + file.key.split('/').map(encodeURIComponent).join('/'), { headers: { Authorization: `Bearer ${session?.access_token}` } })
   if (!res.ok) throw new Error(res.status === 404 ? `${file.label}: file not found.` : `Could not download ${file.label} (${res.status}).`)
   let blob = await res.blob()
-  // The browser normally unzips automatically; this is a fallback if it did not.
-  if (file.encoding === 'gzip' && typeof DecompressionStream !== 'undefined') {
-    const head = new Uint8Array(await blob.slice(0, 2).arrayBuffer())
-    if (head[0] === 0x1f && head[1] === 0x8b) blob = await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).blob()
+  const head = async (b, n) => new Uint8Array(await b.slice(0, n).arrayBuffer())
+  // Files the vendor's browser zipped (gzip) are unzipped here. If a browser already unzipped one, it is left alone.
+  if (file.encoding === 'gzip') {
+    const h = await head(blob, 2)
+    if (h[0] === 0x1f && h[1] === 0x8b) {
+      if (typeof DecompressionStream === 'undefined') throw new Error('This browser cannot open compressed files. Please use a newer Chrome or Edge.')
+      blob = await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).blob()
+    }
   }
+  // Make sure the file really is what its name says (an error page saved as a PDF would look "corrupted").
+  const ext = String(file.name).split('.').pop().toLowerCase()
+  const h = await head(blob, 4), at = (...b) => b.every((v, i) => h[i] === v)
+  const ok = { pdf: at(0x25, 0x50, 0x44, 0x46), docx: at(0x50, 0x4b), xlsx: at(0x50, 0x4b), doc: at(0xd0, 0xcf, 0x11, 0xe0), xls: at(0xd0, 0xcf, 0x11, 0xe0), jpg: at(0xff, 0xd8, 0xff), jpeg: at(0xff, 0xd8, 0xff), png: at(0x89, 0x50, 0x4e, 0x47) }[ext]
+  if (ok === false) throw new Error(`${file.label}: "${file.name}" did not download correctly (it is not a valid .${ext} file). Please try again.`)
   return new Blob([blob], { type: file.type || 'application/octet-stream' })
 }
 
@@ -27,7 +36,7 @@ function saveBlob(blob, name) {
   const a = document.createElement('a')
   a.href = url; a.download = name
   document.body.appendChild(a); a.click(); a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 5000)
+  setTimeout(() => URL.revokeObjectURL(url), 120000)
 }
 const fetchBlobSafe = fetchFileBlob
 const downloadFile = async (file) => saveBlob(await fetchFileBlob(file), file.name)
@@ -89,7 +98,7 @@ export default function Permits() {
     try {
       const blob = await buildPermitZip(r, fetchBlobSafe, (i, n) => setMsg(`Adding document ${i} of ${n}…`))
       saveBlob(blob, `${safe(r.ref)}_${safe(r.requestor_company)}.zip`)
-      setMsg('')
+      setMsg(`ZIP ready: application PDF + ${(r.files || []).length} document(s), ${kb(blob.size)}. If it will not open, tell the developer the size shown here.`)
     } catch (e) { setMsg('Could not create the ZIP: ' + e.message) }
     setBusy(false)
   }

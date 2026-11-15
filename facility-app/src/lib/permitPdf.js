@@ -9,6 +9,14 @@ const t = (v) => String(v ?? '').replace(/[^\u0009\u000a -ÿ]/g, '?').trim() || 
 const kb = (n) => (n >= 1048576 ? (n / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round((n || 0) / 1024)) + ' KB')
 const day = (s) => (s ? new Date(s + (s.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-')
 const stamp = (s) => (s ? new Date(s).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kuala_Lumpur' }) : '-')
+// File name inside the ZIP: keep the extension even when the name is long; no characters Windows rejects.
+export const fitName = (s, max = 110) => {
+  const clean = String(s || 'file').replace(/[^A-Za-z0-9._ ()&,'+-]/g, '_')
+  const m = /(\.[A-Za-z0-9]{1,5})$/.exec(clean)
+  const ext = m ? m[1] : ''
+  const base = clean.slice(0, clean.length - ext.length).replace(/[. ]+$/, '').slice(0, max - ext.length) || 'file'
+  return base + ext
+}
 export const safe = (s) => String(s || 'file').replace(/[^A-Za-z0-9._ -]/g, '_').slice(0, 60)
 
 export async function buildPermitPdf(r) {
@@ -102,10 +110,16 @@ export async function buildPermitZip(r, fetchBlob, onProgress = () => {}) {
   const used = new Set()
   for (let i = 0; i < files.length; i++) {
     onProgress(i + 1, files.length)
-    let name = `${safe(files[i].label)} - ${safe(files[i].name)}`
-    while (used.has(name)) name = '_' + name
-    used.add(name)
+    let name = fitName(`${files[i].label} - ${files[i].name}`)
+    for (let n = 2; used.has(name.toLowerCase()); n++) name = fitName(`${files[i].label} - ${n} - ${files[i].name}`)
+    used.add(name.toLowerCase())
     folder.file(name, await fetchBlob(files[i]))
   }
-  return zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } })
+  const out = await zip.generateAsync({ type: 'blob', mimeType: 'application/zip', compression: 'DEFLATE', compressionOptions: { level: 6 } })
+  // Re-open the finished ZIP and check every entry before offering it, so a bad file is never downloaded.
+  const check = await JSZip.loadAsync(out, { checkCRC32: true })
+  const bad = []
+  for (const entry of Object.values(check.files)) if (!entry.dir) { try { await entry.async('uint8array') } catch { bad.push(entry.name) } }
+  if (bad.length) throw new Error('The ZIP failed its own check (' + bad.join(', ') + '). Please try again.')
+  return out
 }
