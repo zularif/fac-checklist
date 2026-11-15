@@ -60,7 +60,9 @@ export async function buildPermitPdf(r) {
     ['Request Type', r.request_type], ['Project / Activity Title', r.title], ['Work Description', r.description],
     ['Plant', r.plant], ['PO Number', r.po_number], ['Total Workers', r.total_workers],
     ['Start Date', day(r.start_date)], ['Target Completion Date', day(r.target_date)],
-    ['Work Category', r.work_category], ['Work Location', r.work_location], ['Applicable Permit(s)', r.permit_types],
+    ['Work Category', r.work_category],
+    ...(d.locations?.length ? d.locations.map((l) => [`Work Location - ${l.area}`, l.specific]) : [['Work Location', r.work_location]]),
+    ['Applicable Permit(s)', r.permit_types],
   ])
   doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...NAVY)
   if (y > 255) { doc.addPage(); y = 16 }

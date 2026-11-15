@@ -131,7 +131,10 @@ export default function Permits() {
                     <Row label="Host (Part A)" value={d.host?.name ? `${d.host.name} · ${d.host.email}` : ''} />
                     <Row label="Work" value={r.description} />
                     <Row label="Dates" value={`${r.start_date} to ${r.target_date}`} />
-                    <Row label="Category / location" value={[r.work_category, r.work_location].filter(Boolean).join(' / ')} />
+                    <Row label="Category" value={r.work_category} />
+                    {(d.locations?.length ? d.locations : r.work_location ? [{ area: r.work_location, specific: '' }] : []).map((l) => (
+                      <Row key={l.area} label={l.area} value={l.specific || '(no specific location given)'} />
+                    ))}
                     <Row label="PO number" value={r.po_number} />
                     <Row label="Permits" value={r.permit_types} />
                     <Row label="Machines" value={(d.machines || []).map((x) => `${x.name} ×${x.qty}`).join(', ')} />

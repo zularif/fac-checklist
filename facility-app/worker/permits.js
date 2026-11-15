@@ -70,10 +70,21 @@ export async function submitPermit(env, request) {
     requestor_company: req(r.company, 'Requestor company', 150), requestor_contact: req(r.contact, 'Requestor contact no.', 30),
     request_type: req(p.requestType, 'Request type', 20), title: req(p.title, 'Project title', 200), description: req(p.description, 'Work description', 3000),
     plant: req(p.plant, 'Plant', 5), po_number: req(p.po, 'PO number', 60), start_date: req(p.startDate, 'Start date', 10), target_date: req(p.targetCompletion, 'Target completion date', 10),
-    work_category: req(p.category, 'Work category', 100), work_location: req(p.location, 'Work location', 200),
+    work_category: req(p.category, 'Work category', 100), work_location: '',
   }
+  // Work location: one or more areas, each with a required specific location
+  const locations = []
+  for (const x of Array.isArray(p.locations) ? p.locations.slice(0, 4) : []) {
+    const area = text(x?.area, 40)
+    if (!LOCATIONS.includes(area)) throw apiError('Invalid work location.', 'P0001', 400)
+    if (locations.some((l) => l.area === area)) continue
+    const specific = text(x?.specific, 300)
+    if (!specific) throw apiError(`Specific location for ${area} is required.`, 'P0001', 400)
+    locations.push({ area, specific })
+  }
+  if (!locations.length) throw apiError('Select at least one work location.', 'P0001', 400)
+  rec.work_location = locations.map((l) => l.area).join(', ')
   if (!CATEGORIES.includes(rec.work_category)) throw apiError('Invalid work category.', 'P0001', 400)
-  if (!LOCATIONS.includes(rec.work_location)) throw apiError('Invalid work location.', 'P0001', 400)
   if (!['New', 'Renewal'].includes(rec.request_type)) throw apiError('Invalid request type.', 'P0001', 400)
   if (!['P1', 'P2'].includes(rec.plant)) throw apiError('Invalid plant.', 'P0001', 400)
   if (rec.target_date < rec.start_date) throw apiError('Completion date cannot be before the start date.', 'P0001', 400)
@@ -111,6 +122,7 @@ export async function submitPermit(env, request) {
     host,
     requestor: { name: rec.requestor_name, position: rec.requestor_position, company: rec.requestor_company, contact: rec.requestor_contact },
     project: { ...rec, permits, totalWorkers: workers },
+    locations,
     machines: list(d.machines, ['name', 'qty']), equipment: list(d.equipment, ['name', 'qty']), chemicals: list(d.chemicals, ['name', 'qty']),
     mainconSafety: { name: text(mc.name, 100), company: text(mc.company, 150), dosh: text(mc.dosh, 60) },
     subcontractors: list(d.subcontractors, ['company', 'safetyName', 'dosh']),

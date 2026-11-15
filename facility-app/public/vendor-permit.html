@@ -143,7 +143,14 @@ button{font:inherit;cursor:pointer}
   <div class="field c3"><label class="l" for="start">Start Date <span class="req">*</span></label><input type="date" id="start" data-req><div class="msg">Select a start date.</div></div>
   <div class="field c3"><label class="l" for="end">Target Completion Date <span class="req">*</span></label><input type="date" id="end" data-req><div class="msg" id="endMsg">Select a completion date.</div></div>
   <div class="field c3"><label class="l" for="cat">Work Category <span class="req">*</span></label><select id="cat" data-req><option value="">Select one category</option><option>Maintenance</option><option>Construction</option><option>Installation</option><option>Inspection</option></select><div class="msg">Select a work category.</div></div>
-  <div class="field c12"><label class="l" for="loc">Work Location <span class="req">*</span></label><select id="loc" data-req><option value="">Select applicable location</option><option>Production Area</option><option>Non-Production Area</option><option>Facility Area</option><option>Perimeter Area</option></select><div class="msg">Select a work location.</div></div>
+  <div class="field c12" id="locField"><label class="l">Work Location <span class="req">*</span> <span style="text-transform:none;font-weight:400;font-style:italic;color:var(--mut)">Select every area where the work will take place</span></label>
+    <div class="chips" id="locs">
+      <label class="chip"><input type="checkbox" value="Production Area" data-short="Production"><span>Production Area</span></label>
+      <label class="chip"><input type="checkbox" value="Non-Production Area" data-short="Non-Production"><span>Non-Production Area</span></label>
+      <label class="chip"><input type="checkbox" value="Facility Area" data-short="Facility"><span>Facility Area</span></label>
+      <label class="chip"><input type="checkbox" value="Perimeter Area" data-short="Perimeter"><span>Perimeter Area</span></label>
+    </div><div class="msg">Select at least one work location.</div></div>
+  <div class="c12" id="specifics" style="display:grid;gap:10px"></div>
 </div>
 <div class="divider"></div>
 <div class="field" id="permitField"><label class="l">Applicable Permit <span class="req">*</span> <span style="text-transform:none;font-weight:400;font-style:italic;color:var(--mut)">**Please select all permit types required for this project / activity</span></label>
@@ -288,6 +295,23 @@ function updateCount(){
   el.textContent = "Uploaded: "+done+" / "+need.length+" (Safety Personnel Certificate is required for 5 or more workers; Drawing Layout, Machine Certificate, Safety Data Sheet only if applicable)";
 }
 
+/* ---- work location: one required "specific location" box per ticked area ---- */
+const LOC_BOXES = {};
+document.querySelectorAll("#locs input").forEach(cb=>{
+  const wrap = document.createElement("div"); wrap.className="field"; wrap.style.display="none";
+  wrap.innerHTML = '<label class="l"><span class="req">*</span> '+cb.dataset.short+' (Specific Location)</label><textarea maxlength="300" placeholder="e.g. building, floor, line or room"></textarea><div class="msg">Please enter the specific location.</div>';
+  $("specifics").appendChild(wrap);
+  const ta = wrap.querySelector("textarea");
+  ta.addEventListener("input",()=>wrap.classList.remove("invalid"));
+  LOC_BOXES[cb.value] = {wrap, ta};
+  cb.addEventListener("change",()=>{
+    wrap.style.display = cb.checked ? "block" : "none";
+    if(!cb.checked){ ta.value=""; wrap.classList.remove("invalid"); }
+    $("locField").classList.remove("invalid");
+  });
+});
+const pickedLocs = ()=>[...document.querySelectorAll("#locs input:checked")].map(c=>c.value);
+
 /* ---- dynamic rows ---- */
 function esc(s){return String(s).replace(/"/g,"&quot;")}
 function addRow(kind){
@@ -335,6 +359,9 @@ function validate(){
   if($("start").value && $("end").value && $("end").value<$("start").value){
     const f=$("end").closest(".field"); mark(f,true,"Completion date cannot be before the start date."); bad.push(f);
   } else if($("end").value){ $("endMsg").textContent="Select a completion date."; }
+  const pl = pickedLocs();
+  if(mark($("locField"),!pl.length)) bad.push($("locField"));
+  pl.forEach(v=>{ const b=LOC_BOXES[v]; if(mark(b.wrap,!b.ta.value.trim())) bad.push(b.wrap); });
   const anyPermit=[...document.querySelectorAll("#permits input")].some(c=>c.checked);
   const pf=$("permitField"); if(mark(pf,!anyPermit)) bad.push(pf);
   document.querySelectorAll("[data-cond]").forEach(i=>{ const f=i.closest(".field"); if(mark(f,big()&&!i.value.trim())) bad.push(f); });
@@ -393,7 +420,7 @@ $("f").addEventListener("submit",async e=>{
     host:{name:$("hostName").value.trim(),email:$("hostEmail").value.trim()},
     requestor:{name:$("reqName").value.trim(),position:$("reqPos").value.trim(),company:$("reqCo").value.trim(),contact:$("reqTel").value.trim()},
     project:{requestType:$("reqType").value,plant:$("plant").value,po:$("po").value.trim(),title:$("title").value.trim(),description:$("desc").value.trim(),
-      totalWorkers:parseInt($("workers").value,10),startDate:$("start").value,targetCompletion:$("end").value,category:$("cat").value.trim(),location:$("loc").value.trim(),
+      totalWorkers:parseInt($("workers").value,10),startDate:$("start").value,targetCompletion:$("end").value,category:$("cat").value.trim(),locations:pickedLocs().map(v=>({area:v,specific:LOC_BOXES[v].ta.value.trim()})),
       permits:[...document.querySelectorAll("#permits input:checked")].map(c=>c.value)},
     machines:collect("machine"),equipment:collect("equipment"),chemicals:collect("chemical"),
     mainconSafety:{name:$("mcName").value.trim(),company:$("mcCo").value.trim(),dosh:$("mcDosh").value.trim()},
