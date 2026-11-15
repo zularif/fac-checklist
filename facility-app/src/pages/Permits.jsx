@@ -23,6 +23,10 @@ async function fetchFileBlob(file) {
       blob = await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).blob()
     }
   }
+  // Size check: after unzipping, the file must be exactly the size the vendor's browser reported;
+  // a plain file must be exactly the size the server stored. Anything else means a damaged download.
+  const want = file.encoding === 'gzip' ? file.origSize : file.size
+  if (want && blob.size !== want) throw new Error(`${file.label}: "${file.name}" came through damaged (expected ${want} bytes, got ${blob.size}). Please try again; if it repeats, ask the vendor to submit that file again.`)
   // Make sure the file really is what its name says (an error page saved as a PDF would look "corrupted").
   const ext = String(file.name).split('.').pop().toLowerCase()
   const h = await head(blob, 4), at = (...b) => b.every((v, i) => h[i] === v)
@@ -162,7 +166,7 @@ export default function Permits() {
                     <p style={{ margin: '10px 0 4px', fontWeight: 700, fontSize: 13 }}>Documents</p>
                     {(r.files || []).map((f) => (
                       <button key={f.key} type="button" className="btn-secondary" style={{ width: 'auto', padding: '6px 12px', margin: '0 6px 6px 0' }} onClick={() => get(f)}>
-                        <i className="ti ti-download" aria-hidden="true" />{f.label}: {f.name} <span style={{ opacity: 0.6 }}>({kb(f.size)})</span>
+                        <i className="ti ti-download" aria-hidden="true" />{f.label}: {f.name} <span style={{ opacity: 0.6 }}>({kb(f.size)}{f.encoding === 'gzip' ? ', zipped' : ''})</span>
                       </button>
                     ))}
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
