@@ -59,7 +59,7 @@ export async function buildPermitPdf(r) {
     y = next()
   }
 
-  kv('PART A - HOST DETAILS', [['Host Name', d.host?.name], ['Host Email', d.host?.email]])
+  kv('PART A - HOST DETAILS', [['Host Name', d.host?.name], ['Host Email', d.host?.email], ['Host Mobile', d.host?.phone]])
   kv('PART B - PERMIT REQUESTOR (PR) DETAILS - VENDOR DETAILS', [
     ['Requestor Name', r.requestor_name], ['Requestor Position', r.requestor_position],
     ['Requestor Company', r.requestor_company], ['Requestor Contact No.', r.requestor_contact],

@@ -118,6 +118,7 @@ button{font:inherit;cursor:pointer}
 <div class="body"><div class="note" style="margin-bottom:12px">Enter the details of your <b>Wiwynn host</b> (the person who invited you to do the work). After you submit, your host will check your application and key it into the company permit system.</div><div class="grid">
   <div class="field c6"><label class="l" for="hostName">Host Name <span class="req">*</span></label><input type="text" id="hostName" data-req placeholder="Name of your Wiwynn host"><div class="msg">Please enter the host name.</div></div>
   <div class="field c6"><label class="l" for="hostEmail">Host Email <span class="req">*</span></label><input type="text" id="hostEmail" data-req data-email inputmode="email" autocomplete="off" placeholder="name@wiwynn.com"><div class="msg">Enter a valid email address.</div></div>
+  <div class="field c6"><label class="l" for="hostPhone">Host WhatsApp / Mobile No. <span class="req">*</span></label><input type="text" id="hostPhone" data-req data-tel inputmode="tel" autocomplete="off" placeholder="012-3456789"><div class="msg">Enter a valid mobile number.</div></div>
 </div></div></section>
 
 <!-- PART B -->
@@ -417,7 +418,7 @@ $("f").addEventListener("submit",async e=>{
   $("status").style.color="var(--navy)";
   const btn=$("submitBtn"); btn.disabled=true;
   const data={
-    host:{name:$("hostName").value.trim(),email:$("hostEmail").value.trim()},
+    host:{name:$("hostName").value.trim(),email:$("hostEmail").value.trim(),phone:$("hostPhone").value.trim()},
     requestor:{name:$("reqName").value.trim(),position:$("reqPos").value.trim(),company:$("reqCo").value.trim(),contact:$("reqTel").value.trim()},
     project:{requestType:$("reqType").value,plant:$("plant").value,po:$("po").value.trim(),title:$("title").value.trim(),description:$("desc").value.trim(),
       totalWorkers:parseInt($("workers").value,10),startDate:$("start").value,targetCompletion:$("end").value,category:$("cat").value.trim(),locations:pickedLocs().map(v=>({area:v,specific:LOC_BOXES[v].ta.value.trim()})),
@@ -451,7 +452,13 @@ $("f").addEventListener("submit",async e=>{
     setProg(100,"");
     $("f").style.display="none";
     const hn=$("hostName").value.trim().replace(/[<>&"]/g,"");
-    $("done").innerHTML=`<div class="success"><h3>Application submitted</h3><p>Your reference number is <b>${j.ref}</b>.</p><p>Please inform your host <b>${hn}</b> that you have submitted, and quote this reference number. Your host will check your details and key them into the company permit system.</p></div>`;
+    let wa=$("hostPhone").value.replace(/\D/g,"");
+    if(wa.startsWith("00")) wa=wa.slice(2); else if(wa.startsWith("0")) wa="60"+wa.slice(1);
+    const msg="Hi "+$("hostName").value.trim()+", I have submitted the Vendor Work Permit application. Reference no: "+j.ref+". Company: "+$("reqCo").value.trim()+". Please check and key it into the permit system. Thank you.";
+    const waUrl="https://wa.me/"+wa+"?text="+encodeURIComponent(msg);
+    $("done").innerHTML=`<div class="success"><h3>Application submitted</h3><p>Your reference number is <b>${j.ref}</b>.</p><p><b>One more step (required):</b> tell your host <b>${hn}</b> that you have submitted. Your application is not complete until your host knows. Your host will then check your details and key them into the company permit system.</p><p><a class="btn primary" id="waBtn" href="${waUrl}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none;background:#1a7f43">Message host on WhatsApp</a></p><p id="waNote" style="color:#a15c00;font-weight:600">Please press the button above to send your host the reference number.</p></div>`;
+    window.onbeforeunload=function(){ return "You have not told your host yet."; };
+    $("waBtn").addEventListener("click",function(){ window.onbeforeunload=null; $("waNote").style.color="#1b5e20"; $("waNote").textContent="WhatsApp opened. Press Send in WhatsApp to notify your host. Keep reference "+j.ref+" for your records."; });
     window.scrollTo({top:0,behavior:"smooth"});
   }catch(err){
     btn.disabled=false; $("prog").style.display="none";

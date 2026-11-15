@@ -141,7 +141,7 @@ export default function Permits() {
                 {isOpen && (
                   <div style={{ marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
                     <Row label="Requestor" value={`${r.requestor_name} (${r.requestor_position}) · ${r.requestor_contact}`} />
-                    <Row label="Host (Part A)" value={d.host?.name ? `${d.host.name} · ${d.host.email}` : ''} />
+                    <Row label="Host (Part A)" value={d.host?.name ? `${d.host.name} · ${d.host.email}${d.host.phone ? ' · ' + d.host.phone : ''}` : ''} />
                     <Row label="Work" value={r.description} />
                     <Row label="Dates" value={`${r.start_date} to ${r.target_date}`} />
                     <Row label="Category" value={r.work_category} />

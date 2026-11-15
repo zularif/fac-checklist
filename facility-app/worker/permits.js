@@ -88,7 +88,8 @@ export async function submitPermit(env, request) {
   if ((recent?.n || 0) >= MAX_PER_HOUR) throw apiError('Too many applications from this network. Please try again later.', 'RATE', 429)
 
   const r = d.requestor || {}, p = d.project || {}, mc = d.mainconSafety || {}, h = d.host || {}
-  const host = { name: req(h.name, 'Host name', 100), email: req(h.email, 'Host email', 120).toLowerCase() }
+  const host = { name: req(h.name, 'Host name', 100), email: req(h.email, 'Host email', 120).toLowerCase(), phone: req(h.phone, 'Host mobile number', 30) }
+  if (!/^[+()\-\s\d]{8,30}$/.test(host.phone) || host.phone.replace(/\D/g, '').length < 8) throw apiError('Enter a valid host mobile number.', 'P0001', 400)
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(host.email)) throw apiError('Enter a valid host email address.', 'P0001', 400)
   const rec = {
     requestor_name: req(r.name, 'Requestor name', 100), requestor_position: req(r.position, 'Requestor position', 100),
