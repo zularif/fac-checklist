@@ -50,6 +50,7 @@ const newRef = () => {
 }
 const list = (a, keys) => (Array.isArray(a) ? a.slice(0, 50).map((o) => Object.fromEntries(keys.map((k) => [k, text(o?.[k], 200)]))).filter((o) => Object.values(o).some(Boolean)) : [])
 
+// Host email notifications use BREVO_API_KEY and MAIL_FROM (set in Cloudflare).
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 
 // Emails the host that a new application arrived (Brevo). Never throws: the application is already saved.
