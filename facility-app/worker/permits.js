@@ -50,6 +50,31 @@ const newRef = () => {
 }
 const list = (a, keys) => (Array.isArray(a) ? a.slice(0, 50).map((o) => Object.fromEntries(keys.map((k) => [k, text(o?.[k], 200)]))).filter((o) => Object.values(o).some(Boolean)) : [])
 
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+
+// Emails the host that a new application arrived (Brevo). Never throws: the application is already saved.
+async function notifyHost(env, request, ref, data) {
+  if (!env.BREVO_API_KEY || !env.MAIL_FROM) return
+  try {
+    const link = new URL('/permits', request.url).href
+    const p = data.project || {}, r = data.requestor || {}
+    const rows = [['Reference', ref], ['Vendor company', r.company], ['Requestor', r.name], ['Project', p.title], ['Plant', p.plant], ['Workers', p.totalWorkers], ['Dates', `${p.start_date || '-'} to ${p.target_date || '-'}`]]
+    const html = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#14213d"><p>Hi ${esc(data.host.name)},</p><p>A vendor has submitted a work permit application and named you as the host.</p><table cellpadding="6" style="border-collapse:collapse">${rows.map(([k, v]) => `<tr><td style="border:1px solid #cbd5e0"><b>${esc(k)}</b></td><td style="border:1px solid #cbd5e0">${esc(v)}</td></tr>`).join('')}</table><p>Open <a href="${esc(link)}">Received applications</a>, search the reference, download the ZIP and key it into the official form.</p></div>`
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': env.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({
+        sender: { name: 'Facility Vendor Permit', email: env.MAIL_FROM },
+        to: [{ email: data.host.email, name: data.host.name }],
+        subject: `Vendor work permit ${ref} - ${r.company || 'new application'}`,
+        htmlContent: html,
+      }),
+      signal: AbortSignal.timeout(6000),
+    })
+    if (!res.ok) console.error('Brevo email failed', res.status, (await res.text()).slice(0, 200))
+  } catch (e) { console.error('Brevo email error', String(e)) }
+}
+
 export async function submitPermit(env, request) {
   if (!env.DB || !(env.PERMITS || env.FILES)) throw apiError('Server is not set up.', 'CONFIG', 500)
   let form
