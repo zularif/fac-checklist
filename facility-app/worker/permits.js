@@ -83,7 +83,7 @@ async function notifyHost(env, request, ref, data) {
   } catch (e) { console.error('Brevo email error', String(e)) }
 }
 
-export async function submitPermit(env, request) {
+export async function submitPermit(env, request, ctx0) {
   if (!env.DB || !(env.PERMITS || env.FILES)) throw apiError('Server is not set up.', 'CONFIG', 500)
   let form
   try { form = await request.formData() } catch { throw apiError('Invalid submission.', 'P0001', 400) }
@@ -209,6 +209,8 @@ async function permit_delete(ctx, body) {
   try { files = JSON.parse(row.files || '[]') } catch { /* none */ }
   for (const f of files) await deleteDoc(ctx.env, 'permits/' + f.key)
   await ctx.db.prepare('DELETE FROM permits WHERE id = ?').bind(id).run()
+ if (ctx0?.waitUntil) ctx0.waitUntil(notifyHost(env, request, ref, data))
+else await notifyHost(env, request, ref, data)
   return { ok: true }
 }
 
