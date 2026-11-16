@@ -504,7 +504,7 @@ $("f").addEventListener("submit",async e=>{
   }catch(err){
     btn.disabled=false; $("prog").style.display="none";
     $("status").style.color="var(--err)";
-    $("status").textContent="Submission failed: "+err.message+". Please try again; if it keeps failing, contact the facility team.";
+    $("status").textContent="Submission failed: "+String(err.message).replace(/[. ]+$/,"")+". Please try again; if it keeps failing, contact the facility team.";
   }
 });
 $("cancelBtn").onclick=()=>{ if(confirm("Discard this application and clear the form?")) location.reload(); };

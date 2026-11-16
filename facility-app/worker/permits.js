@@ -36,7 +36,14 @@ export async function getDoc(env, key) {
   const { value, metadata } = await env.FILES.getWithMetadata(key, 'arrayBuffer')
   return value === null ? null : { body: value, contentType: metadata?.contentType, encoding: metadata?.encoding }
 }
-const safeName = (s) => String(s).replace(/[^A-Za-z0-9._ -]/g, '_').replace(/\.{2,}/g, '.').slice(0, 80) || 'file'
+// Cleans a file name but keeps the extension, even when a long name must be shortened.
+const safeName = (s) => {
+  const clean = String(s).replace(/[^A-Za-z0-9._ -]/g, '_').replace(/\.{2,}/g, '.').trim().replace(/[. ]+$/, '')
+  const dot = clean.lastIndexOf('.')
+  const ext = dot > 0 && clean.length - dot <= 6 ? clean.slice(dot) : ''
+  const base = (ext ? clean.slice(0, dot) : clean).slice(0, 80 - ext.length)
+  return (base + ext) || 'file'
+}
 
 async function ipHash(request, env) {
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown'
