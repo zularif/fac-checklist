@@ -11,6 +11,9 @@ const toBytes = (s) => {
 const supported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
 const isIOS = () => /iPhone|iPad|iPod/i.test(navigator.userAgent)
 
+// The phone's encryption keys, sent to the server so the notification can carry the message text.
+const keysOf = (sub) => { const k = sub.toJSON().keys || {}; return { endpoint: sub.endpoint, p256dh: k.p256dh, auth: k.auth } }
+
 async function currentSub() {
   const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((r) => setTimeout(() => r(null), 4000))])
   return reg ? reg.pushManager.getSubscription() : null
@@ -28,6 +31,7 @@ export default function PushToggle() {
       if (!supported()) return live && setState('unsupported')
       if (Notification.permission === 'denied') return live && setState('blocked')
       const sub = await currentSub().catch(() => null)
+      if (sub) db.rpc('push_subscribe', keysOf(sub))   // keeps this phone's keys up to date
       if (live) setState(sub ? 'on' : 'off')
     })()
     return () => { live = false }
@@ -43,7 +47,7 @@ export default function PushToggle() {
       const reg = await navigator.serviceWorker.ready
       let sub = await reg.pushManager.getSubscription()
       if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toBytes(data.key) })
-      const { error: e2 } = await db.rpc('push_subscribe', { endpoint: sub.endpoint })
+      const { error: e2 } = await db.rpc('push_subscribe', keysOf(sub))
       if (e2) throw new Error(e2.message)
       setState('on'); setMsg('Notifications are on for this phone.')
     } catch (e) { setMsg('Could not turn on notifications: ' + (e.message || e)) } finally { setBusy(false) }

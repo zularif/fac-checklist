@@ -136,9 +136,20 @@ async function pushWebhook(env, request, ref, data) {
   } catch (e) { console.error('Webhook push error', String(e)) }
 }
 
+// Text of the phone notification: "Hi <host>, your vendor <company> submitted ..."
+function pushMessage(ref, data) {
+  const p = data.project || {}, r = data.requestor || {}
+  const host = String(data.host?.name || '').trim() || 'there'
+  const workers = p.totalWorkers ? `, ${p.totalWorkers} worker${p.totalWorkers > 1 ? 's' : ''}` : ''
+  return {
+    title: `New vendor permit ${ref}`,
+    body: `Hi ${host}, your vendor ${r.company || 'a vendor'} submitted a work permit application for "${p.title || 'a project'}" (${p.plant || '-'}${workers}, ${p.start_date || '-'} to ${p.target_date || '-'}). Tap to open.`,
+  }
+}
+
 // Tells the host / staff about a new application on every channel that is set up (email, Telegram, webhook, phone push). Never throws.
 async function notifyHost(env, request, ref, data) {
-  await Promise.allSettled([emailHost(env, request, ref, data), pushTelegram(env, request, ref, data), pushWebhook(env, request, ref, data), pushToStaff(env)])
+  await Promise.allSettled([emailHost(env, request, ref, data), pushTelegram(env, request, ref, data), pushWebhook(env, request, ref, data), pushToStaff(env, pushMessage(ref, data))])
 }
 
 export async function submitPermit(env, request) {
