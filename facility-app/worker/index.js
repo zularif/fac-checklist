@@ -20,8 +20,9 @@ import { RPC as CORE_RPC, FUNCTIONS } from './rpc.js'
 import { runSetup, adminDbUpdate } from './setup.js'
 import { INVENTORY_RPC } from './inventory.js'
 import { PERMIT_RPC, submitPermit, getDoc } from './permits.js'
+import { PUSH_RPC } from './push.js'
 
-const RPC = { ...CORE_RPC, ...INVENTORY_RPC, ...PERMIT_RPC }
+const RPC = { ...CORE_RPC, ...INVENTORY_RPC, ...PERMIT_RPC, ...PUSH_RPC }
 
 const BUCKETS = {
   parts: { write: 'admin', publicRead: true },

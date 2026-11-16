@@ -5,6 +5,7 @@
 // Files are compressed in the vendor's browser first and kept in the FILES (KV) store.
 
 import { apiError } from './schema.js'
+import { pushToStaff } from './push.js'
 
 export const DOC_TYPES = {
   mos: 'Method of Statement (MOS)', hirarc: 'HIRARC', timeline: 'Project Timeline',
@@ -61,7 +62,7 @@ const list = (a, keys) => (Array.isArray(a) ? a.slice(0, 50).map((o) => Object.f
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 
 // Emails the host that a new application arrived (Brevo). Never throws: the application is already saved.
-async function notifyHost(env, request, ref, data) {
+async function emailHost(env, request, ref, data) {
   if (!env.BREVO_API_KEY || !env.MAIL_FROM) return
   try {
     const link = new URL('/permits', request.url).href
@@ -81,6 +82,63 @@ async function notifyHost(env, request, ref, data) {
     })
     if (!res.ok) console.error('Brevo email failed', res.status, (await res.text()).slice(0, 200))
   } catch (e) { console.error('Brevo email error', String(e)) }
+}
+
+// Short plain-text message used by the push channels (Telegram / webhook).
+function pushText(request, ref, data) {
+  const p = data.project || {}, r = data.requestor || {}
+  const link = new URL('/permits', request.url).href
+  return [
+    'New vendor work permit application',
+    `Ref: ${ref}`,
+    `Company: ${r.company || '-'}`,
+    `Requestor: ${r.name || '-'} (${r.contact || '-'})`,
+    `Project: ${p.title || '-'}`,
+    `Plant: ${p.plant || '-'} | Workers: ${p.totalWorkers ?? '-'}`,
+    `Dates: ${p.start_date || '-'} to ${p.target_date || '-'}`,
+    `Host: ${data.host?.name || '-'}`,
+    link,
+  ].join('\n')
+}
+
+// Phone push through a Telegram bot. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID (a person or a group) in Cloudflare.
+async function pushTelegram(env, request, ref, data) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: pushText(request, ref, data), disable_web_page_preview: true }),
+      signal: AbortSignal.timeout(6000),
+    })
+    if (!res.ok) console.error('Telegram push failed', res.status, (await res.text()).slice(0, 200))
+  } catch (e) { console.error('Telegram push error', String(e)) }
+}
+
+// Generic webhook (Teams / Power Automate, Slack, etc.). Set NOTIFY_WEBHOOK_URL in Cloudflare.
+async function pushWebhook(env, request, ref, data) {
+  if (!env.NOTIFY_WEBHOOK_URL) return
+  try {
+    const p = data.project || {}, r = data.requestor || {}
+    const res = await fetch(env.NOTIFY_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        title: `Vendor work permit ${ref}`, text: pushText(request, ref, data), ref,
+        company: r.company || '', requestor: r.name || '', project: p.title || '', plant: p.plant || '',
+        workers: p.totalWorkers ?? null, start_date: p.start_date || '', target_date: p.target_date || '',
+        host_name: data.host?.name || '', host_email: data.host?.email || '', host_phone: data.host?.phone || '',
+        link: new URL('/permits', request.url).href,
+      }),
+      signal: AbortSignal.timeout(6000),
+    })
+    if (!res.ok) console.error('Webhook push failed', res.status, (await res.text()).slice(0, 200))
+  } catch (e) { console.error('Webhook push error', String(e)) }
+}
+
+// Tells the host / staff about a new application on every channel that is set up (email, Telegram, webhook, phone push). Never throws.
+async function notifyHost(env, request, ref, data) {
+  await Promise.allSettled([emailHost(env, request, ref, data), pushTelegram(env, request, ref, data), pushWebhook(env, request, ref, data), pushToStaff(env)])
 }
 
 export async function submitPermit(env, request) {

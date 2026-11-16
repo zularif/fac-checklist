@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { db } from '../lib/db'
 import { useIsAdmin } from '../lib/useIsAdmin'
 import { buildPermitPdf, buildPermitZip, safe } from '../lib/permitPdf'
+import PushToggle from '../components/PushToggle'
 
 // Vendor work permit applications submitted from /vendor-permit.html.
 // Staff can read them, download the uploaded documents and set a status.
@@ -115,6 +116,7 @@ export default function Permits() {
       <p className="page-sub" style={{ margin: '0 0 8px' }}>
         Vendor link: <a href="/vendor-permit.html" target="_blank" rel="noreferrer">{link}</a>
       </p>
+      <PushToggle />
       <input type="search" placeholder="Search reference, company, title…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ marginBottom: 8 }} />
       <div className="chip-row">
         {['All', ...STATUSES].map((s) => (

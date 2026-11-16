@@ -32,6 +32,8 @@ export default defineConfig({
         // App shell caching only — data always comes live from the Worker API,
         // keeping the offline queue (not the SW) responsible for data sync.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Phone push notifications (see public/push-sw.js).
+        importScripts: ['push-sw.js'],
         navigateFallbackDenylist: [/^\/api\//, /^\/files\//],
         // After "Update now" the new version takes over open pages straight away.
         clientsClaim: true,
