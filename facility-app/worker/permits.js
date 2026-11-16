@@ -147,9 +147,9 @@ function pushMessage(ref, data) {
   }
 }
 
-// Tells the host / staff about a new application on every channel that is set up (email, Telegram, webhook, phone push). Never throws.
+// Tells the host / staff about a new application on every channel that is set up (email, Telegram, webhook, phone push to that host only). Never throws.
 async function notifyHost(env, request, ref, data) {
-  await Promise.allSettled([emailHost(env, request, ref, data), pushTelegram(env, request, ref, data), pushWebhook(env, request, ref, data), pushToStaff(env, pushMessage(ref, data))])
+  await Promise.allSettled([emailHost(env, request, ref, data), pushTelegram(env, request, ref, data), pushWebhook(env, request, ref, data), pushToStaff(env, pushMessage(ref, data), { hostEmail: data.host?.email })])
 }
 
 export async function submitPermit(env, request) {

@@ -3,7 +3,8 @@
 //   push_subscribe    (staff)  save this phone/browser
 //   push_unsubscribe  (staff)  remove it
 //   push_test         (Admin)  send a test notification to everyone subscribed
-// pushToStaff(env) is called when a vendor submits a permit application.
+// pushToStaff(env, message, { hostEmail }) is called when a vendor submits a permit application: only phones
+// whose owner entered that host email get it. Each phone is tied to one host email (push_subscriptions.host_email).
 // The push carries the message text (title + body), encrypted for each phone (RFC 8291) with the keys
 // the phone gave when it subscribed. A phone saved without keys still gets a short fixed message.
 // The signing key pair is created automatically and kept in the push_config table.
@@ -66,15 +67,17 @@ async function authHeader(env, keys, endpoint) {
   return `vapid t=${head}.${body}.${b64u(sig)}, k=${keys.public_key}`
 }
 
-// Sends a push to every subscribed phone. `message` is { title, body } (optional). Never throws. Returns how many were accepted.
-export async function pushToStaff(env, message) {
+// Sends a push to the phones of ONE host: `to` is { hostEmail } (the host named on the form) or { userId } (a test to
+// your own phones). Anyone else gets nothing. `message` is { title, body }. Never throws. Returns how many were accepted.
+export async function pushToStaff(env, message, to = {}) {
   if (!env.DB) return 0
+  const email = String(to.hostEmail || '').trim().toLowerCase()
+  if (!email && !to.userId) return 0
   let sent = 0
   try {
     const keys = await getKeys(env)
-    let results
-    try { results = (await env.DB.prepare('SELECT endpoint, p256dh, auth FROM push_subscriptions').all()).results }
-    catch { results = (await env.DB.prepare('SELECT endpoint FROM push_subscriptions').all()).results }   // database update 0005 not applied yet
+    const q = email ? 'SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE lower(host_email) = ?' : 'SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ?'
+    const { results } = await env.DB.prepare(q).bind(email || to.userId).all()
     const text = JSON.stringify({ title: String(message?.title || 'New vendor work permit').slice(0, 100), body: String(message?.body || 'A vendor submitted a permit application. Tap to open.').slice(0, 600), url: '/permits' })
     await Promise.allSettled((results || []).map(async (s) => {
       try {
@@ -98,17 +101,26 @@ async function push_public_key(ctx) {
   return { key: (await getKeys(ctx.env)).public_key }
 }
 
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+
 async function push_subscribe(ctx, body) {
   if (!ctx.actor) throw apiError('permission denied', '42501', 403)
   const endpoint = String(body.endpoint || '')
   if (!okEndpoint(endpoint)) throw apiError('This browser is not supported for notifications.', 'P0001', 400)
   const p256dh = String(body.p256dh || '').slice(0, 200) || null, auth = String(body.auth || '').slice(0, 100) || null
-  try {
-    await ctx.db.prepare('INSERT INTO push_subscriptions (endpoint, user_id, p256dh, auth) VALUES (?, ?, ?, ?) ON CONFLICT(endpoint) DO UPDATE SET user_id = excluded.user_id, p256dh = excluded.p256dh, auth = excluded.auth').bind(endpoint, ctx.user.id, p256dh, auth).run()
-  } catch {   // database update 0005 not applied yet: save without the keys
-    await ctx.db.prepare('INSERT INTO push_subscriptions (endpoint, user_id) VALUES (?, ?) ON CONFLICT(endpoint) DO UPDATE SET user_id = excluded.user_id').bind(endpoint, ctx.user.id).run()
-  }
+  const mail = String(body.host_email || '').trim().toLowerCase().slice(0, 120)
+  if (mail && !EMAIL.test(mail)) throw apiError('Enter a valid email address.', 'P0001', 400)
+  await ctx.db.prepare(`INSERT INTO push_subscriptions (endpoint, user_id, p256dh, auth, host_email) VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(endpoint) DO UPDATE SET user_id = excluded.user_id, p256dh = COALESCE(excluded.p256dh, p256dh), auth = COALESCE(excluded.auth, auth), host_email = COALESCE(excluded.host_email, host_email)`)
+    .bind(endpoint, ctx.user.id, p256dh, auth, mail || null).run()
   return { ok: true }
+}
+
+// The host email saved for this phone (so the app can show it).
+async function push_my_email(ctx, body) {
+  if (!ctx.actor) throw apiError('permission denied', '42501', 403)
+  const row = await ctx.db.prepare('SELECT host_email FROM push_subscriptions WHERE endpoint = ?').bind(String(body.endpoint || '')).first()
+  return { host_email: row?.host_email || '' }
 }
 
 async function push_unsubscribe(ctx, body) {
@@ -119,9 +131,9 @@ async function push_unsubscribe(ctx, body) {
 
 async function push_test(ctx) {
   if (ctx.actor?.role !== 'Admin') throw apiError('permission denied: administrator required', '42501', 403)
-  const total = (await ctx.db.prepare('SELECT COUNT(*) AS n FROM push_subscriptions').first())?.n || 0
-  const sent = await pushToStaff(ctx.env, { title: 'Test notification', body: `Hi ${ctx.actor.name || 'there'}, phone notifications are working.` })
+  const total = (await ctx.db.prepare('SELECT COUNT(*) AS n FROM push_subscriptions WHERE user_id = ?').bind(ctx.user.id).first())?.n || 0
+  const sent = await pushToStaff(ctx.env, { title: 'Test notification', body: `Hi ${ctx.actor.name || 'there'}, phone notifications are working.` }, { userId: ctx.user.id })
   return { total, sent }
 }
 
-export const PUSH_RPC = { push_public_key, push_subscribe, push_unsubscribe, push_test }
+export const PUSH_RPC = { push_public_key, push_subscribe, push_my_email, push_unsubscribe, push_test }
