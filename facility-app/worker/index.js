@@ -60,7 +60,7 @@ async function handleApi(request, env, url) {
   if (method === 'POST' && path === '/api/auth/pin') return json(await loginWithPin(env, request, await readJson(request)))
   if (method === 'POST' && path === '/api/auth/password') return json(await loginWithPassword(env, request, await readJson(request)))
 
-  if (method === 'POST' && path === '/api/public/permit') return json(await submitPermit(env, request))
+  if (method === 'POST' && path === '/api/public/permit') return json(await submitPermit(env, request, ctx0))
 
   const auth = await authenticate(env, request)
   const ctx = { env, db: env.DB, user: auth.user, actor: auth.actor }
