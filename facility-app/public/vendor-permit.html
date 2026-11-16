@@ -69,6 +69,12 @@ button{font:inherit;cursor:pointer}
 .doc .fitem button{background:none;border:0;color:var(--err);text-decoration:underline;padding:0}
 .doc .mode{font-size:11.5px;font-style:italic;color:var(--mut);margin:0 0 6px}
 #status{margin:12px 0;font-weight:600}
+.summary{margin:12px 0;padding:14px 16px;border:2px solid var(--err);border-radius:8px;background:#fff6f6}
+.summary h3{margin:0 0 8px;color:var(--err);font-size:15px}
+.summary ul{margin:0;padding-left:20px}
+.summary li{margin:4px 0}
+.summary a{color:#14213d;font-weight:600}
+.summary small{color:#4a5568}
 .prog{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-top:6px;display:none}
 .prog>div{height:100%;width:0;background:var(--amber);transition:width .2s}
 .success{background:#f1faf2;border:1px solid #a5d6a7;border-left:5px solid var(--ok);padding:16px;border-radius:8px}
@@ -203,6 +209,7 @@ button{font:inherit;cursor:pointer}
   <div class="docs" id="docs"></div>
 </div></section>
 
+<div id="summary" class="summary" role="alert" style="display:none"></div>
 <div id="status" role="status"></div>
 <div class="prog" id="prog"><div></div></div>
 <p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button type="submit" class="btn primary" id="submitBtn">Submit to host</button><button type="button" class="btn" id="cancelBtn" style="background:#eceff3;padding:12px 22px">Cancel</button></p>
@@ -372,6 +379,39 @@ function validate(){
 }
 document.querySelectorAll("input,select,textarea").forEach(i=>i.addEventListener("input",()=>i.closest(".field")?.classList.remove("invalid")));
 
+/* ---- list every incomplete item by name above the Submit button ---- */
+let summaryItems=[];
+function describe(el){
+  const part=(el.closest("section.part")?.querySelector(".tag")?.textContent||"").trim();
+  let name="";
+  const h=el.querySelector("h4");
+  if(h){ const c=h.cloneNode(true); c.querySelectorAll(".badge").forEach(b=>b.remove()); name=c.textContent.replace(/^\d+\.\s*/,"").trim(); }
+  else { const l=el.querySelector("label.l"); if(l){ const c=l.cloneNode(true); c.querySelectorAll("span").forEach(b=>b.remove()); name=c.textContent.trim(); } }
+  const m=el.querySelector(".msg"); const why=(m?.textContent||"").trim();
+  return {el,part,name:name||"Required item",why};
+}
+function showSummary(bad){
+  summaryItems=bad.map(describe);
+  renderSummary();
+}
+function renderSummary(){
+  const box=$("summary");
+  summaryItems=summaryItems.filter(i=>i.el.classList.contains("invalid"));
+  if(!summaryItems.length){ box.style.display="none"; return; }
+  box.innerHTML=""; box.style.display="block";
+  const h=document.createElement("h3"); h.textContent="Please complete "+summaryItems.length+" item"+(summaryItems.length>1?"s":"")+" before submitting:"; box.appendChild(h);
+  const ul=document.createElement("ul");
+  summaryItems.forEach(i=>{
+    const li=document.createElement("li"), a=document.createElement("a"); a.href="#"; a.textContent=(i.part?i.part.replace(/^PART /,"Part ")+": ":"")+i.name;
+    a.addEventListener("click",e=>{ e.preventDefault(); i.el.scrollIntoView({behavior:"smooth",block:"center"}); const f=i.el.querySelector("input,textarea,select,button"); if(f) setTimeout(()=>f.focus({preventScroll:true}),350); });
+    li.appendChild(a);
+    if(i.why){ const sm=document.createElement("small"); sm.textContent=" - "+i.why; li.appendChild(sm); }
+    ul.appendChild(li);
+  });
+  box.appendChild(ul);
+}
+["input","change","click"].forEach(ev=>document.addEventListener(ev,()=>{ if($("summary").style.display!=="none") setTimeout(renderSummary,0); }));
+
 /* ---- compression ---- */
 const fmtMB = n => (n/1048576).toFixed(2)+" MB";
 function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),i=new Image();i.onload=()=>{URL.revokeObjectURL(u);res(i)};i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("Cannot read image"))};i.src=u;});}
@@ -414,7 +454,8 @@ $("f").addEventListener("submit",async e=>{
   e.preventDefault();
   $("status").textContent="";
   const bad=validate();
-  if(bad.length){ $("status").style.color="var(--err)"; $("status").textContent="Please fix "+bad.length+" highlighted item(s) before submitting."; bad[0].scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  if(bad.length){ showSummary(bad); $("status").textContent=""; $("summary").scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  $("summary").style.display="none";
   $("status").style.color="var(--navy)";
   const btn=$("submitBtn"); btn.disabled=true;
   const data={
