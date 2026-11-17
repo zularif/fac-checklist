@@ -177,6 +177,7 @@ button{font:inherit;cursor:pointer}
 <div class="body">
   <div class="sub"><span>A. Machine <small style="font-weight:400;color:var(--mut)">&ndash; machinery requiring Certificate of Fitness from DOSH, e.g. scissor lift</small></span><button type="button" class="btn add" data-add="machine">+ Add row</button></div>
   <div id="machine"></div>
+  <div id="machineDoc" style="margin-top:10px"></div>
   <div class="divider"></div>
   <div class="sub"><span>B. Equipment</span><button type="button" class="btn add" data-add="equipment">+ Add row</button></div>
   <div id="equipment"></div>
@@ -232,7 +233,7 @@ const DOCS = [
   {k:"timeline",label:"Project Timeline", t:"r", multi:false, hint:"Schedule of work activities."},
   {k:"safetycert",label:"Safety Personnel Certificate", t:"c", multi:true, hint:"Required when Total Workers is 5 or more."},
   {k:"drawing",label:"Drawing Layout (*if applicable)", t:"o", multi:false, hint:"Site / work area layout drawing."},
-  {k:"machinecert",label:"Machine Certificate (*if applicable)", t:"o", multi:true, hint:"Inspection / calibration certificate."},
+  {k:"machinecert",label:"Machine Certificate", t:"c", multi:true, hint:"Required when a machine is listed above, e.g. DOSH Certificate of Fitness or inspection certificate. Attach one or more files."},
   {k:"sds",label:"Safety Data Sheet (SDS) (*if applicable)", t:"o", multi:true, hint:"For each chemical to be used."}
 ];
 const files = {};            // doc key -> array of File
@@ -263,15 +264,16 @@ function renderDoc(d){
   el.querySelector(".up").textContent = files[d.k].length && !d.multi ? "Replace file" : "Attach file";
   updateCount();
 }
+let docNo = 0;
 DOCS.forEach((d,n)=>{
   const el = document.createElement("div");
   el.className = "doc field"; el.id = "doc_"+d.k;
   const bt = d.t==="r"?'<span class="badge r">Required</span>':d.t==="c"?'<span class="badge c">Conditional</span>':'<span class="badge o">Optional</span>';
-  el.innerHTML = `<h4>${n+1}. ${d.label}${bt}</h4><p class="mode">${d.multi?"Multiple files allowed":"Single file"}</p><p class="hint">${d.hint}</p>
+  el.innerHTML = `<h4>${d.k==="machinecert"?"":(++docNo)+". "}${d.label}${bt}</h4><p class="mode">${d.multi?"Multiple files allowed":"Single file"}</p><p class="hint">${d.hint}</p>
     <div class="flist"></div>
     <div class="pick"><button type="button" class="btn up">Attach file</button><span class="fname"></span></div>
     <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"${d.multi?" multiple":""}><div class="msg"></div>`;
-  $("docs").appendChild(el);
+  $(d.k==="machinecert"?"machineDoc":"docs").appendChild(el);   // the machine certificate sits under the machine list in Part D
   const inp = el.querySelector("input");
   const add = fl => {
     const errs=[];
@@ -295,12 +297,19 @@ DOCS.forEach((d,n)=>{
   renderDoc(d);
 });
 function showDocErr(el,t){ el.classList.add("invalid"); const m=el.querySelector(".msg"); m.textContent=t; m.style.display="block"; }
-function neededDocs(){ return ["mos","hirarc","timeline"].concat(big()?["safetycert"]:[]); }
+function hasMachine(){ return collect("machine").length>0; }
+function neededDocs(){ return ["mos","hirarc","timeline"].concat(big()?["safetycert"]:[]).concat(hasMachine()?["machinecert"]:[]); }
+function updateMachineDoc(){
+  const on=hasMachine(), el=$("doc_machinecert"), b=el.querySelector(".badge");
+  b.textContent=on?"Required":"Conditional"; b.className="badge "+(on?"r":"c");
+  if(!on || files.machinecert.length){ el.classList.remove("invalid"); el.querySelector(".msg").style.display="none"; }
+  updateCount();
+}
 function updateCount(){
   const need = neededDocs(), done = need.filter(k=>files[k].length).length;
   const el = $("upCount"); if(!el) return;
   el.style.color = done>=need.length ? "var(--ok)" : "var(--err)";
-  el.textContent = "Uploaded: "+done+" / "+need.length+" (Safety Personnel Certificate is required for 5 or more workers; Drawing Layout, Machine Certificate, Safety Data Sheet only if applicable)";
+  el.textContent = "Uploaded: "+done+" / "+need.length+" (Safety Personnel Certificate is required for 5 or more workers; Machine Certificate is required when a machine is listed in Part D; Drawing Layout and Safety Data Sheet only if applicable)";
 }
 
 /* ---- work location: one required "specific location" box per ticked area ---- */
@@ -337,6 +346,9 @@ function addRow(kind){
 }
 document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>addRow(b.dataset.add));
 ["machine","equipment","chemical","sub"].forEach(addRow);
+$("machine").addEventListener("input",updateMachineDoc);
+$("machine").addEventListener("click",()=>setTimeout(updateMachineDoc,0));
+updateMachineDoc();
 function collect(kind){
   return [...$(kind).children].map(r=>{const o={};r.querySelectorAll("input").forEach(i=>o[i.dataset.f]=i.value.trim());return o;}).filter(o=>Object.values(o).some(v=>v));
 }
@@ -374,7 +386,7 @@ function validate(){
   const pf=$("permitField"); if(mark(pf,!anyPermit)) bad.push(pf);
   document.querySelectorAll("[data-cond]").forEach(i=>{ const f=i.closest(".field"); if(mark(f,big()&&!i.value.trim())) bad.push(f); });
   const need=neededDocs();
-  DOCS.forEach(d=>{ const el=$("doc_"+d.k); if(need.includes(d.k)&&!files[d.k].length){ showDocErr(el,"This document is required."); bad.push(el);} });
+  DOCS.forEach(d=>{ const el=$("doc_"+d.k); if(need.includes(d.k)&&!files[d.k].length){ showDocErr(el,d.k==="machinecert"?"Attach the machine certificate for the machine(s) you listed in Part D.":"This document is required."); bad.push(el);} });
   return bad;
 }
 document.querySelectorAll("input,select,textarea").forEach(i=>i.addEventListener("input",()=>i.closest(".field")?.classList.remove("invalid")));

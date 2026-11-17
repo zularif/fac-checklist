@@ -218,7 +218,7 @@ export async function submitPermit(env, request) {
     if (SINGLE_FILE_DOCS.includes(key) && arr.length > 1) throw apiError(`${DOC_TYPES[key]}: only one file is allowed.`, 'P0001', 400)
     if (arr.length > MAX_FILES_PER_DOC) throw apiError(`${DOC_TYPES[key]}: at most ${MAX_FILES_PER_DOC} files are allowed.`, 'P0001', 400)
   }
-  const needed = ['mos', 'hirarc', 'timeline', ...(big ? ['safetycert'] : [])]
+  const needed = ['mos', 'hirarc', 'timeline', ...(big ? ['safetycert'] : []), ...(list(d.machines, ['name', 'qty']).length ? ['machinecert'] : [])]   // a listed machine needs its certificate
   for (const k of needed) if (!incoming[k]?.length) throw apiError(`${DOC_TYPES[k]} is required.`, 'P0001', 400)
 
   const data = {
