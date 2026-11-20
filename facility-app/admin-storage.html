@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storage Dashboard</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --text:#1c2230; --muted:#6b7385; --line:#e3e6ec;
+    --accent:#2563eb; --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --bg:#12151c; --card:#1b202b; --text:#e8ebf2; --muted:#98a1b5; --line:#2a3141; --accent:#5b8cff; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:1000px;margin:0 auto;padding:16px}
+  h1{font-size:20px;margin:8px 0 2px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .stat .label{color:var(--muted);font-size:12px}
+  .stat .val{font-size:22px;font-weight:650;margin-top:2px}
+  .bar{height:12px;background:var(--line);border-radius:99px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .4s}
+  .row{display:flex;gap:8px;align-items:center;margin:6px 0}
+  .row .name{width:120px;flex:none;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .track{flex:1}
+  .row .num{width:90px;flex:none;text-align:right;font-size:13px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;cursor:pointer;white-space:nowrap}
+  td.k{word-break:break-all}
+  td.n,th.n{text-align:right;white-space:nowrap}
+  input,button{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text)}
+  button{background:var(--accent);color:#fff;border:0;cursor:pointer}
+  button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+  .login{display:flex;gap:8px;flex-wrap:wrap}
+  .login input{flex:1;min-width:200px}
+  .msg{font-size:13px;margin-top:8px}
+  .bad{color:var(--bad)} .warn{color:var(--warn)} .ok{color:var(--ok)}
+  .pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;border:1px solid var(--line)}
+  .hide{display:none}
+  .tablewrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Storage Dashboard</h1>
+  <div class="sub">KV namespace <b>FILES</b> &middot; measured from the actual stored values</div>
+
+  <div class="msg" id="msg">Loading...</div>
+
+  <div id="dash" class="hide">
+    <div class="card">
+      <div class="row" style="margin-top:0">
+        <div><b id="usedTxt">0</b> <span class="sub">of</span> <b>1 GB</b> <span class="sub">free-plan limit (shared by the whole account)</span></div>
+        <div style="margin-left:auto"><button class="ghost" id="refresh">Refresh</button></div>
+      </div>
+      <div class="bar"><i id="usedBar" style="width:0"></i></div>
+      <div class="msg" id="usedNote"></div>
+    </div>
+
+    <div class="card grid">
+      <div class="stat"><div class="label">Total keys</div><div class="val" id="sKeys">-</div></div>
+      <div class="stat"><div class="label">Total size</div><div class="val" id="sSize">-</div></div>
+      <div class="stat"><div class="label">Average per key</div><div class="val" id="sAvg">-</div></div>
+      <div class="stat"><div class="label">Largest key</div><div class="val" id="sMax">-</div></div>
+      <div class="stat"><div class="label">Near 25 MiB limit</div><div class="val" id="sBig">-</div></div>
+      <div class="stat"><div class="label">Expiring keys</div><div class="val" id="sExp">-</div></div>
+    </div>
+
+    <div class="card">
+      <b>Usage by key group</b>
+      <div class="sub">Grouped by the text before the first ":" or "/" in the key name</div>
+      <div id="groups"></div>
+    </div>
+
+    <div class="card">
+      <b>Size distribution</b>
+      <div id="buckets"></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="margin-top:0">
+        <b>All keys</b>
+        <input id="filter" placeholder="Search key name" style="margin-left:auto;max-width:220px">
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr>
+            <th data-s="name">Key</th>
+            <th class="n" data-s="bytes">Size</th>
+            <th class="n" data-s="share">% of total</th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="msg" id="more"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const LIMIT_BYTES = 1024*1024*1024;      // 1 GB free plan
+const VALUE_MAX = 25*1024*1024;          // 25 MiB per value
+let items = [];
+let sortBy = "bytes", sortDir = -1;
+
+const $ = id => document.getElementById(id);
+function fmt(b){
+  if (b == null) return "-";
+  if (b < 1024) return b + " B";
+  if (b < 1048576) return (b/1024).toFixed(1) + " KB";
+  if (b < 1073741824) return (b/1048576).toFixed(1) + " MB";
+  return (b/1073741824).toFixed(2) + " GB";
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function group(name){ const m = name.match(/^([^:\/]+)[:\/]/); return m ? m[1] : "(no prefix)"; }
+
+async function loadAll(){
+  $("msg").classList.remove("hide");
+  $("msg").textContent = "Loading...";
+  $("msg").className = "msg";
+  items = [];
+  let cursor = null;
+  try{
+    do{
+      const r = await fetch("/api/admin-storage" + (cursor ? "?cursor=" + encodeURIComponent(cursor) : ""), );
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || ("HTTP " + r.status));
+      items.push(...d.items);
+      cursor = d.cursor;
+      $("msg").textContent = "Loaded " + items.length + " keys...";
+    } while (cursor);
+    $("msg").classList.add("hide");
+    $("dash").classList.remove("hide");
+    render();
+  }catch(e){
+    $("msg").textContent = "Error: " + e.message;
+    $("msg").className = "msg bad";
+  }
+}
+
+function render(){
+  const total = items.reduce((s,i)=>s+(i.bytes||0),0);
+  const keyNames = items.reduce((s,i)=>s+i.nameBytes,0);
+  const used = total + keyNames;
+  const pct = used / LIMIT_BYTES * 100;
+
+  $("usedTxt").textContent = fmt(used);
+  $("usedBar").style.width = Math.max(pct, 0.5) + "%";
+  $("usedBar").style.background = pct > 90 ? "var(--bad)" : pct > 70 ? "var(--warn)" : "var(--accent)";
+  $("usedNote").innerHTML = pct.toFixed(1) + "% of 1 GB used by this namespace. "
+    + (pct > 90 ? '<span class="bad">Almost full - clean up now.</span>'
+      : pct > 70 ? '<span class="warn">Getting high.</span>'
+      : '<span class="ok">Healthy.</span>')
+    + " Other KV namespaces in the same account also count toward the 1 GB.";
+
+  const max = items.reduce((m,i)=> (i.bytes||0) > (m.bytes||0) ? i : m, {bytes:0,name:""});
+  $("sKeys").textContent = items.length;
+  $("sSize").textContent = fmt(total);
+  $("sAvg").textContent = fmt(items.length ? total/items.length : 0);
+  $("sMax").textContent = fmt(max.bytes);
+  $("sMax").title = max.name;
+  const big = items.filter(i => (i.bytes||0) > VALUE_MAX*0.8).length;
+  $("sBig").textContent = big;
+  $("sBig").className = "val " + (big ? "bad" : "ok");
+  $("sExp").textContent = items.filter(i => i.expiration).length;
+
+  // groups
+  const g = {};
+  items.forEach(i => { const k = group(i.name); g[k] = g[k] || {bytes:0,count:0}; g[k].bytes += i.bytes||0; g[k].count++; });
+  const gl = Object.entries(g).sort((a,b)=>b[1].bytes-a[1].bytes);
+  const gmax = gl.length ? gl[0][1].bytes || 1 : 1;
+  $("groups").innerHTML = gl.map(([k,v]) =>
+    '<div class="row"><div class="name" title="'+esc(k)+'">'+esc(k)+'</div>'
+    + '<div class="track"><div class="bar"><i style="width:'+(v.bytes/gmax*100)+'%"></i></div></div>'
+    + '<div class="num">'+fmt(v.bytes)+' ('+v.count+')</div></div>').join("");
+
+  // buckets
+  const defs = [["< 10 KB",0,10240],["10 KB - 100 KB",10240,102400],["100 KB - 1 MB",102400,1048576],["1 MB - 5 MB",1048576,5242880],["> 5 MB",5242880,Infinity]];
+  const bc = defs.map(([l,a,b]) => [l, items.filter(i => (i.bytes||0) >= a && (i.bytes||0) < b).length]);
+  const bmax = Math.max(1, ...bc.map(x=>x[1]));
+  $("buckets").innerHTML = bc.map(([l,n]) =>
+    '<div class="row"><div class="name">'+l+'</div><div class="track"><div class="bar"><i style="width:'+(n/bmax*100)+'%"></i></div></div><div class="num">'+n+' keys</div></div>').join("");
+
+  renderRows();
+}
+
+function renderRows(){
+  const q = $("filter").value.toLowerCase();
+  const total = items.reduce((s,i)=>s+(i.bytes||0),0) || 1;
+  let list = items.filter(i => i.name.toLowerCase().includes(q));
+  list.sort((a,b) => {
+    const av = sortBy==="name" ? a.name : (a.bytes||0);
+    const bv = sortBy==="name" ? b.name : (b.bytes||0);
+    return (av>bv?1:av<bv?-1:0) * sortDir;
+  });
+  const shown = list.slice(0,200);
+  $("rows").innerHTML = shown.map(i =>
+    '<tr><td class="k">'+esc(i.name)+(i.expiration?' <span class="pill">expires</span>':'')+'</td>'
+    + '<td class="n">'+fmt(i.bytes)+'</td>'
+    + '<td class="n">'+((i.bytes||0)/total*100).toFixed(1)+'%</td></tr>').join("");
+  $("more").textContent = list.length > 200 ? "Showing first 200 of " + list.length + " keys. Use search to narrow down." : "";
+}
+
+document.querySelectorAll("th[data-s]").forEach(th => th.addEventListener("click", () => {
+  const s = th.dataset.s === "share" ? "bytes" : th.dataset.s;
+  if (sortBy === s) sortDir *= -1; else { sortBy = s; sortDir = s==="name" ? 1 : -1; }
+  renderRows();
+}));
+$("filter").addEventListener("input", renderRows);
+$("refresh").addEventListener("click", loadAll);
+loadAll();
+</script>
+</body>
+</html>
